@@ -1,0 +1,90 @@
+import { Router } from 'express';
+import { pool } from '../db/pool.js';
+import { requireRole } from '../middleware/requireAuth.js';
+import { cacheDelPattern } from '../cache/redis.js';
+
+const router = Router();
+const editorOrAdmin = requireRole('editor', 'admin');
+
+router.get('/', editorOrAdmin, async (req, res) => {
+  const { type, status, page = '1', limit = '20', q } = req.query;
+  const offset = (parseInt(page) - 1) * parseInt(limit);
+
+  const conditions = [];
+  const params = [];
+
+  if (type) { params.push(type); conditions.push(`p.type = $${params.length}`); }
+  if (status) { params.push(status); conditions.push(`p.status = $${params.length}`); }
+  if (q) { params.push(`%${q}%`); conditions.push(`p.title ILIKE $${params.length}`); }
+
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  params.push(parseInt(limit), offset);
+  const { rows } = await pool.query(
+    `SELECT p.*, u.name AS author_name
+     FROM posts p
+     LEFT JOIN users u ON u.id = p.author_id
+     ${where}
+     ORDER BY p.updated_at DESC
+     LIMIT $${params.length - 1} OFFSET $${params.length}`,
+    params
+  );
+
+  res.json(rows);
+});
+
+router.post('/', editorOrAdmin, async (req, res) => {
+  const { type, status, slug, title, excerpt, content, featured_image_url,
+          is_featured, meta_title, meta_description } = req.body;
+
+  const { rows } = await pool.query(
+    `INSERT INTO posts (type, status, slug, title, excerpt, content,
+       featured_image_url, is_featured, author_id, meta_title, meta_description,
+       published_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,
+       CASE WHEN $2 = 'published' THEN NOW() ELSE NULL END)
+     RETURNING *`,
+    [type, status || 'draft', slug, title, excerpt, content ? JSON.stringify(content) : null,
+     featured_image_url, is_featured || false, req.user.id, meta_title, meta_description]
+  );
+
+  await cacheDelPattern('cache:posts:*');
+  res.status(201).json(rows[0]);
+});
+
+router.get('/:id', editorOrAdmin, async (req, res) => {
+  const { rows } = await pool.query('SELECT * FROM posts WHERE id = $1', [req.params.id]);
+  if (!rows[0]) return res.status(404).json({ error: 'Not found' });
+  res.json(rows[0]);
+});
+
+router.put('/:id', editorOrAdmin, async (req, res) => {
+  const { type, status, slug, title, excerpt, content, featured_image_url,
+          is_featured, meta_title, meta_description } = req.body;
+
+  const { rows } = await pool.query(
+    `UPDATE posts SET
+       type = $1, status = $2, slug = $3, title = $4, excerpt = $5,
+       content = $6, featured_image_url = $7, is_featured = $8,
+       meta_title = $9, meta_description = $10,
+       published_at = CASE
+         WHEN $2 = 'published' AND published_at IS NULL THEN NOW()
+         ELSE published_at END
+     WHERE id = $11
+     RETURNING *`,
+    [type, status, slug, title, excerpt, content ? JSON.stringify(content) : null,
+     featured_image_url, is_featured, meta_title, meta_description, req.params.id]
+  );
+
+  if (!rows[0]) return res.status(404).json({ error: 'Not found' });
+  await cacheDelPattern('cache:posts:*');
+  res.json(rows[0]);
+});
+
+router.delete('/:id', editorOrAdmin, async (req, res) => {
+  await pool.query("UPDATE posts SET status = 'archived' WHERE id = $1", [req.params.id]);
+  await cacheDelPattern('cache:posts:*');
+  res.json({ ok: true });
+});
+
+export default router;

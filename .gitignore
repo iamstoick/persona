@@ -1,0 +1,16 @@
+node_modules/
+.env
+.env.local
+.env.*.local
+dist/
+.next/
+.turbo/
+*.log
+coverage/
+.DS_Store
+pgdata_dev/
+redisdata_dev/
+pgdata_prod/
+redisdata_prod/
+apps/api/uploads/
+certbot/
