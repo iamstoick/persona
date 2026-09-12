@@ -1,9 +1,14 @@
 import { apiFetch, SiteSettings } from '@/lib/api';
 import { ContactForm } from '@/components/ContactForm';
 
+// Render on every request: a build-time fetch here (during `next build`, which has no
+// network route to the api container) would bake in the fallback defaults below
+// permanently until the next ISR revalidation — same issue fixed on the homepage.
+export const dynamic = 'force-dynamic';
+
 const DEFAULT_EMAIL = 'gerald@geraldvillorente.com';
 const DEFAULT_SOCIALS = [
-  { label: 'GitHub', href: 'https://github.com/geraldvillorente' },
+  { label: 'GitHub', href: 'https://github.com/iamstoick' },
   { label: 'LinkedIn', href: 'https://linkedin.com/in/geraldvillorente' },
   { label: 'X', href: 'https://twitter.com/geraldvillorente' },
 ];

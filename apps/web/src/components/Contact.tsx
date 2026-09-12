@@ -3,7 +3,7 @@ import type { SocialLink } from '@/lib/api';
 const DEFAULT_EMAIL = 'gerald@geraldvillorente.com';
 const DEFAULT_HEADLINE = "Have an infrastructure or Drupal problem worth solving? Let's talk.";
 const DEFAULT_SOCIALS: SocialLink[] = [
-  { label: 'GitHub', href: 'https://github.com/geraldvillorente' },
+  { label: 'GitHub', href: 'https://github.com/iamstoick' },
   { label: 'LinkedIn', href: 'https://linkedin.com/in/geraldvillorente' },
   { label: 'X', href: 'https://twitter.com/geraldvillorente' },
 ];
