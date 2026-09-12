@@ -93,8 +93,9 @@ export function Writing({ featured, posts }: Props) {
         {rest.map((post, i) => (
           <div key={post.id}>
             {i > 0 && <hr style={{ border: 'none', borderTop: '1px solid #1F1F1F', margin: '1.25rem 0' }} />}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', padding: '0.25rem 0' }}>
+            <div className="writing-row" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', padding: '0.25rem 0' }}>
               <span
+                className="writing-row-date"
                 style={{
                   fontFamily: 'var(--font-mono)',
                   fontSize: '0.75rem',
@@ -107,6 +108,7 @@ export function Writing({ featured, posts }: Props) {
               </span>
               <a
                 href={`/blog/${post.slug}`}
+                className="writing-row-title"
                 style={{ fontFamily: 'var(--font-body)', fontSize: '1rem', color: '#E8E8E8', flex: 1, textDecoration: 'none' }}
               >
                 {post.title}

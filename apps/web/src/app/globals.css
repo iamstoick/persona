@@ -32,6 +32,17 @@ html {
   .site-nav-toggle {
     display: block !important;
   }
+
+  .writing-row {
+    flex-wrap: wrap !important;
+  }
+  .writing-row-date {
+    min-width: 0 !important;
+  }
+  .writing-row-title {
+    flex-basis: 100% !important;
+    order: 1;
+  }
 }
 
 body {
