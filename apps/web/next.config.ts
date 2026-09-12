@@ -36,9 +36,6 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
       { protocol: 'http', hostname: 'localhost' },
-      // Imported blog posts hotlink images from the original site rather than
-      // re-hosting them locally — see the blog-import summary for that tradeoff.
-      { protocol: 'https', hostname: 'geraldvillorente.com' },
     ],
     formats: ['image/avif', 'image/webp'],
   },
@@ -59,6 +56,15 @@ const nextConfig: NextConfig = {
       {
         source: '/api/:path*',
         destination: `${apiOrigin}/api/:path*`,
+      },
+      {
+        // In production nginx proxies /uploads straight to the API before it ever reaches
+        // this app (see docker/nginx/default.conf), so this rewrite is only exercised in
+        // local dev, where there's no nginx in front. Keeping it here means relative
+        // `/uploads/...` image paths (used for re-hosted blog images) resolve the same way
+        // in both environments, on whatever domain the site is actually served from.
+        source: '/uploads/:path*',
+        destination: `${apiOrigin}/uploads/:path*`,
       },
     ];
   },
