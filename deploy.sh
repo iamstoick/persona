@@ -13,3 +13,17 @@ docker compose -f docker-compose.prod.yml -f docker-compose.server.yml \
   up -d --build postgres redis api web
 
 docker compose -f docker-compose.prod.yml -f docker-compose.server.yml ps
+
+# Optional: purge the Cloudflare cache after deploying, so visitors don't get stale
+# HTML/assets served from Cloudflare's edge. Set these in the server's .env (or export
+# them before running this script) to enable it — skipped silently if either is unset.
+if [[ -n "${CLOUDFLARE_ZONE_ID:-}" && -n "${CLOUDFLARE_API_TOKEN:-}" ]]; then
+  echo "Purging Cloudflare cache..."
+  curl -s -X POST "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/purge_cache" \
+    -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+    -H "Content-Type: application/json" \
+    --data '{"purge_everything":true}'
+  echo
+else
+  echo "Skipping Cloudflare cache purge (CLOUDFLARE_ZONE_ID / CLOUDFLARE_API_TOKEN not set)."
+fi
