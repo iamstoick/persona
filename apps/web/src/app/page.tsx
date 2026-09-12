@@ -8,8 +8,12 @@ import { Contact } from '@/components/Contact';
 import { Footer } from '@/components/Footer';
 import { apiFetch, Post, PostsResponse, SiteSettings, Project, Service, Course } from '@/lib/api';
 
-// Revalidate hourly: fresh enough for admin edits to show up, avoids a fetch to the API on every request.
-export const revalidate = 3600;
+// Render on every request rather than prerendering at build time: `next build` runs in
+// a stage with no network route to the api container, so a build-time ISR snapshot of
+// this page always bakes in the empty/fallback data (no featured post, no projects, etc.)
+// and only self-heals up to an hour later when the ISR window happens to revalidate.
+// The api layer already caches its own responses (Redis), so this stays cheap.
+export const dynamic = 'force-dynamic';
 
 async function getHomeData() {
   const [postsResult, settings, projects, services, courses] = await Promise.all([
