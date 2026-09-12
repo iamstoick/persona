@@ -78,6 +78,12 @@ export function Courses({ courses = DEFAULT_COURSES }: Props) {
           </a>
         ))}
       </div>
+
+      <div className="mobile-view-all" style={{ marginTop: '2rem' }}>
+        <a href="/courses" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: '#63E6A0', textDecoration: 'none' }}>
+          View all courses →
+        </a>
+      </div>
     </section>
   );
 }

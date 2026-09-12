@@ -25,11 +25,19 @@ html {
   display: none !important;
 }
 
+.mobile-view-all {
+  display: none !important;
+}
+
 @media (max-width: 720px) {
   .site-nav-links {
     display: none !important;
   }
   .site-nav-toggle {
+    display: block !important;
+  }
+
+  .mobile-view-all {
     display: block !important;
   }
 
