@@ -7,6 +7,15 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
+# Load .env into this shell so vars like CLOUDFLARE_ZONE_ID/CLOUDFLARE_API_TOKEN are
+# available below — docker compose's `env_file:` only injects these into containers,
+# it does not export them here.
+if [[ -f .env ]]; then
+  set -a
+  source .env
+  set +a
+fi
+
 git pull origin main
 
 docker compose -f docker-compose.prod.yml -f docker-compose.server.yml \
