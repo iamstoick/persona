@@ -54,7 +54,7 @@ const personJsonLd = {
   worksFor: { '@type': 'Organization', name: 'Independent / Consulting' },
   knowsAbout: ['Drupal', 'DevOps', 'Kubernetes', 'Platform Engineering', 'Terraform'],
   sameAs: [
-    'https://github.com/geraldvillorente',
+    'https://github.com/iamstoick',
     'https://linkedin.com/in/geraldvillorente',
     'https://twitter.com/geraldvillorente',
   ],
