@@ -49,7 +49,13 @@ export function Services({ services = DEFAULT_SERVICES }: Props) {
         Services
       </h2>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gap: '1.5rem',
+        }}
+      >
         {services.map((svc, i) => (
           <div
             key={svc.id}
