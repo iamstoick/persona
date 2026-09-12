@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { getTokens, useCaptureAuthTokens } from '@/lib/auth/client';
 import type { CourseDetail } from '@/lib/api';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
@@ -33,17 +32,13 @@ export default function CourseOutlinePage() {
 }
 
 function CourseOutlineInner() {
-  useCaptureAuthTokens();
   const { slug } = useParams<{ slug: string }>();
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    const { accessToken } = getTokens();
-    fetch(`${API}/api/courses/${slug}`, {
-      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-    })
+    fetch(`${API}/api/courses/${slug}`, { credentials: 'include' })
       .then((r) => {
         if (!r.ok) throw new Error('not found');
         return r.json();

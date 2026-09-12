@@ -1,8 +1,8 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { setTokens, getTokens, clearTokens } from '@/lib/auth/client';
+import { usePathname } from 'next/navigation';
+import { isLoggedIn } from '@/lib/auth/client';
 
 const NAV_LINKS = [
   { href: '/admin', label: 'Dashboard' },
@@ -25,40 +25,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 }
 
 function AdminLayoutInner({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const token = searchParams.get('token');
-    const refresh = searchParams.get('refresh');
-
-    if (token && refresh) {
-      setTokens(token, refresh);
-      router.replace('/admin');
-      return;
-    }
-
-    const { accessToken } = getTokens();
-    if (!accessToken) {
-      const loginUrl = `${process.env.NEXT_PUBLIC_API_URL || ''}/api/auth/google`;
+    if (!isLoggedIn()) {
+      const loginUrl = `${process.env.NEXT_PUBLIC_API_URL || ''}/api/auth/google?redirect=${encodeURIComponent(pathname)}`;
       window.location.href = loginUrl;
       return;
     }
 
     setReady(true);
-  }, [router, searchParams]);
+  }, [pathname]);
 
   function logout() {
-    const { refreshToken } = getTokens();
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: '' }),
-    }).catch(() => {});
-    clearTokens();
-    window.location.href = '/';
+      credentials: 'include',
+    })
+      .catch(() => {})
+      .finally(() => {
+        window.location.href = '/';
+      });
   }
 
   if (!ready) return (

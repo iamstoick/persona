@@ -5,6 +5,49 @@ import { redis } from '../cache/redis.js';
 
 const router = Router();
 
+const isProd = process.env.NODE_ENV === 'production';
+
+// Access token: readable on every path (default '/') since most routes need it.
+// Refresh token: scoped to '/api/auth' only — it's never sent on ordinary API calls,
+// shrinking the set of endpoints that ever see this longer-lived, more sensitive cookie.
+// Both are httpOnly (invisible to JS/XSS) and Secure in production (HTTPS only).
+const ACCESS_COOKIE = 'gv_access';
+const REFRESH_COOKIE = 'gv_refresh';
+const ACCESS_MAX_AGE_MS = 15 * 60 * 1000;
+const REFRESH_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
+function setAuthCookies(res, accessToken, refreshToken) {
+  res.cookie(ACCESS_COOKIE, accessToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: ACCESS_MAX_AGE_MS,
+  });
+  res.cookie(REFRESH_COOKIE, refreshToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: 'lax',
+    path: '/api/auth',
+    maxAge: REFRESH_MAX_AGE_MS,
+  });
+  // Non-secret, JS-readable flag so the frontend can tell "logged in" from "logged out"
+  // without ever touching the actual tokens — mirrors the access token's lifetime.
+  res.cookie('gv_logged_in', '1', {
+    httpOnly: false,
+    secure: isProd,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: ACCESS_MAX_AGE_MS,
+  });
+}
+
+function clearAuthCookies(res) {
+  res.clearCookie(ACCESS_COOKIE, { path: '/' });
+  res.clearCookie(REFRESH_COOKIE, { path: '/api/auth' });
+  res.clearCookie('gv_logged_in', { path: '/' });
+}
+
 function signTokens(user) {
   const payload = { id: user.id, email: user.email, role: user.role };
   const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
@@ -35,38 +78,52 @@ router.get(
   async (req, res) => {
     const { accessToken, refreshToken } = signTokens(req.user);
     await redis.set(`refresh:${req.user.id}`, refreshToken, 'EX', 60 * 60 * 24 * 7);
+    setAuthCookies(res, accessToken, refreshToken);
 
+    // Tokens travel in cookies now, never in the URL — nothing sensitive left to strip
+    // client-side, and nothing sensitive lands in server/CDN access logs or browser history.
     const redirectUrl = new URL(process.env.FRONTEND_URL || 'http://localhost:8899');
     redirectUrl.pathname = safeRedirectPath(req.query.state);
-    redirectUrl.searchParams.set('token', accessToken);
-    redirectUrl.searchParams.set('refresh', refreshToken);
     res.redirect(redirectUrl.toString());
   }
 );
 
 router.post('/refresh', async (req, res) => {
-  const { refreshToken } = req.body;
-  if (!refreshToken) return res.status(400).json({ error: 'refreshToken required' });
+  const refreshToken = req.cookies?.[REFRESH_COOKIE];
+  if (!refreshToken) return res.status(401).json({ error: 'No refresh token' });
 
   let payload;
   try {
     payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
   } catch {
+    clearAuthCookies(res);
     return res.status(401).json({ error: 'Invalid refresh token' });
   }
 
   const stored = await redis.get(`refresh:${payload.id}`);
-  if (stored !== refreshToken) return res.status(401).json({ error: 'Refresh token revoked' });
+  if (stored !== refreshToken) {
+    clearAuthCookies(res);
+    return res.status(401).json({ error: 'Refresh token revoked' });
+  }
 
   const { accessToken, refreshToken: newRefresh } = signTokens(payload);
   await redis.set(`refresh:${payload.id}`, newRefresh, 'EX', 60 * 60 * 24 * 7);
+  setAuthCookies(res, accessToken, newRefresh);
 
-  res.json({ accessToken, refreshToken: newRefresh });
+  res.json({ ok: true });
 });
 
 router.post('/logout', async (req, res) => {
-  const { userId } = req.body;
-  if (userId) await redis.del(`refresh:${userId}`);
+  const refreshToken = req.cookies?.[REFRESH_COOKIE];
+  if (refreshToken) {
+    try {
+      const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+      await redis.del(`refresh:${payload.id}`);
+    } catch {
+      // Already invalid/expired — nothing to revoke.
+    }
+  }
+  clearAuthCookies(res);
   res.json({ ok: true });
 });
 

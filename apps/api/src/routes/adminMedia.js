@@ -10,11 +10,27 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const UPLOAD_DIR = path.join(__dirname, '../../uploads');
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
+// Maps each accepted MIME type to the extension we save it under — the stored extension
+// must never come from the client-supplied original filename (or from trusting the
+// client's Content-Type at face value), or a spoofed mimetype paired with an attacker-
+// chosen filename extension (e.g. "shell.html" sent as image/png) could get saved and
+// served statically with a browser-executable extension. SVG is deliberately excluded:
+// it can embed <script> and executes when navigated to directly from the same origin.
+const ALLOWED_TYPES = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/gif': '.gif',
+  'image/webp': '.webp',
+  'video/mp4': '.mp4',
+  'video/webm': '.webm',
+  'application/pdf': '.pdf',
+};
+
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
   filename: (_req, file, cb) => {
     const unique = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
-    cb(null, `${unique}${path.extname(file.originalname)}`);
+    cb(null, `${unique}${ALLOWED_TYPES[file.mimetype] || ''}`);
   },
 });
 
@@ -22,8 +38,7 @@ const upload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    const allowed = /image\/(jpeg|png|gif|webp|svg\+xml)|video\/|application\/pdf/;
-    cb(null, allowed.test(file.mimetype));
+    cb(null, Object.prototype.hasOwnProperty.call(ALLOWED_TYPES, file.mimetype));
   },
 });
 

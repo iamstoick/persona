@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { getTokens, useCaptureAuthTokens } from '@/lib/auth/client';
+import { isLoggedIn } from '@/lib/auth/client';
 import { renderTiptapContent } from '@/lib/renderTiptap';
 import type { CourseLessonFull } from '@/lib/api';
 
@@ -17,7 +17,6 @@ export default function CourseLessonPage() {
 }
 
 function CourseLessonInner() {
-  useCaptureAuthTokens();
   const { slug, lessonId } = useParams<{ slug: string; lessonId: string }>();
   const [lesson, setLesson] = useState<CourseLessonFull | null>(null);
   const [loading, setLoading] = useState(true);
@@ -27,15 +26,12 @@ function CourseLessonInner() {
   const loginHref = `${API}/api/auth/google?redirect=${encodeURIComponent(`/courses/${slug}/lessons/${lessonId}`)}`;
 
   function load() {
-    const { accessToken } = getTokens();
-    if (!accessToken) {
+    if (!isLoggedIn()) {
       setUnauthorized(true);
       setLoading(false);
       return;
     }
-    fetch(`${API}/api/courses/${slug}/lessons/${lessonId}`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    })
+    fetch(`${API}/api/courses/${slug}/lessons/${lessonId}`, { credentials: 'include' })
       .then((r) => {
         if (r.status === 401) throw new Error('unauthorized');
         if (!r.ok) throw new Error('not found');
@@ -53,11 +49,10 @@ function CourseLessonInner() {
   async function toggleComplete() {
     if (!lesson) return;
     setMarking(true);
-    const { accessToken } = getTokens();
     try {
       await fetch(`${API}/api/courses/${slug}/lessons/${lessonId}/complete`, {
         method: lesson.completed ? 'DELETE' : 'POST',
-        headers: { Authorization: `Bearer ${accessToken}` },
+        credentials: 'include',
       });
       setLesson({ ...lesson, completed: !lesson.completed });
     } finally {

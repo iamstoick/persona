@@ -7,8 +7,8 @@ const csp = [
   `script-src 'self'${isProd ? '' : " 'unsafe-eval'"} 'unsafe-inline'`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
-  "img-src 'self' data: https: http://localhost:4000",
-  "connect-src 'self' http://localhost:4000",
+  `img-src 'self' data: https:${isProd ? '' : ' http://localhost:4000'}`,
+  `connect-src 'self'${isProd ? '' : ' http://localhost:4000'}`,
   "frame-src https://giscus.app",
   "object-src 'none'",
   "base-uri 'self'",
@@ -19,13 +19,21 @@ const csp = [
   .filter(Boolean)
   .join('; ');
 
+// X-Frame-Options, X-Content-Type-Options, Referrer-Policy, and Permissions-Policy are
+// already set by the production nginx vhost (/etc/nginx/sites-available/geraldvillorente.com)
+// in front of this app — kept only here for local dev (no nginx in front) plus CSP/HSTS,
+// which nginx does not set.
 const securityHeaders = [
   { key: 'Content-Security-Policy', value: csp },
-  { key: 'X-Frame-Options', value: 'DENY' },
-  { key: 'X-Content-Type-Options', value: 'nosniff' },
-  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+  ...(isProd
+    ? []
+    : [
+        { key: 'X-Frame-Options', value: 'DENY' },
+        { key: 'X-Content-Type-Options', value: 'nosniff' },
+        { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+      ]),
 ];
 
 const nextConfig: NextConfig = {

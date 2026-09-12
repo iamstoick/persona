@@ -1,12 +1,21 @@
 import jwt from 'jsonwebtoken';
 
-export function requireAuth(req, res, next) {
+// The access token lives in an httpOnly cookie (set by /api/auth/*) so client-side JS —
+// and by extension any XSS — can never read it. The Authorization header is still
+// accepted as a fallback for non-browser callers (scripts, future mobile clients).
+function extractToken(req) {
+  if (req.cookies?.gv_access) return req.cookies.gv_access;
   const header = req.headers.authorization;
-  if (!header?.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Missing authorization header' });
+  if (header?.startsWith('Bearer ')) return header.slice(7);
+  return null;
+}
+
+export function requireAuth(req, res, next) {
+  const token = extractToken(req);
+  if (!token) {
+    return res.status(401).json({ error: 'Missing authorization' });
   }
 
-  const token = header.slice(7);
   try {
     req.user = jwt.verify(token, process.env.JWT_SECRET);
     next();
@@ -19,11 +28,11 @@ export function requireAuth(req, res, next) {
 // undefined. For endpoints that render differently for logged-in vs anonymous visitors
 // (e.g. a course outline that's public, with lesson content gated to registered users).
 export function optionalAuth(req, _res, next) {
-  const header = req.headers.authorization;
-  if (!header?.startsWith('Bearer ')) return next();
+  const token = extractToken(req);
+  if (!token) return next();
 
   try {
-    req.user = jwt.verify(header.slice(7), process.env.JWT_SECRET);
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
   } catch {
     // Invalid/expired token on an optional-auth route: treat as anonymous rather than failing.
   }
