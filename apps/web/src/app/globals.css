@@ -21,6 +21,19 @@ html {
   scroll-behavior: smooth;
 }
 
+.site-nav-toggle {
+  display: none !important;
+}
+
+@media (max-width: 720px) {
+  .site-nav-links {
+    display: none !important;
+  }
+  .site-nav-toggle {
+    display: block !important;
+  }
+}
+
 body {
   background-color: var(--color-bg);
   color: var(--color-text);

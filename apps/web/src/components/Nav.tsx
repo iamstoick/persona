@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -30,6 +31,7 @@ const ctaStyle: React.CSSProperties = {
 
 export function Nav() {
   const pathname = usePathname();
+  const [menuOpen, setMenuOpen] = useState(false);
   if (pathname?.startsWith('/admin')) return null;
 
   // On the homepage, a plain native anchor (#skills) is the only reliable way to jump
@@ -56,8 +58,11 @@ export function Nav() {
     </>
   );
 
+  const closeMenu = () => setMenuOpen(false);
+
   return (
     <nav
+      className="site-nav"
       style={{
         position: 'fixed',
         top: 0,
@@ -76,18 +81,21 @@ export function Nav() {
       {isHome ? (
         <button
           type="button"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          onClick={() => {
+            closeMenu();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
           style={logoStyle}
         >
           {logoContent}
         </button>
       ) : (
-        <Link href="/" style={logoStyle}>
+        <Link href="/" style={logoStyle} onClick={closeMenu}>
           {logoContent}
         </Link>
       )}
 
-      <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
+      <div className="site-nav-links" style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
         {links.map(({ anchor, label }) =>
           isHome ? (
             <a key={anchor} href={`#${anchor}`} style={linkStyle}>
@@ -109,6 +117,104 @@ export function Nav() {
           </Link>
         )}
       </div>
+
+      <button
+        type="button"
+        className="site-nav-toggle"
+        aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+        aria-expanded={menuOpen}
+        onClick={() => setMenuOpen((v) => !v)}
+        style={{
+          display: 'none',
+          background: 'none',
+          border: '1px solid #333333',
+          borderRadius: '4px',
+          width: '2.25rem',
+          height: '2.25rem',
+          padding: 0,
+          cursor: 'pointer',
+          position: 'relative',
+        }}
+      >
+        <span
+          aria-hidden
+          style={{
+            position: 'absolute',
+            left: '0.5rem',
+            right: '0.5rem',
+            top: '0.75rem',
+            height: '2px',
+            background: '#E8E8E8',
+            transform: menuOpen ? 'translateY(6px) rotate(45deg)' : 'none',
+            transition: 'transform 0.2s',
+          }}
+        />
+        <span
+          aria-hidden
+          style={{
+            position: 'absolute',
+            left: '0.5rem',
+            right: '0.5rem',
+            top: '1.1875rem',
+            height: '2px',
+            background: '#E8E8E8',
+            opacity: menuOpen ? 0 : 1,
+            transition: 'opacity 0.2s',
+          }}
+        />
+        <span
+          aria-hidden
+          style={{
+            position: 'absolute',
+            left: '0.5rem',
+            right: '0.5rem',
+            top: '1.625rem',
+            height: '2px',
+            background: '#E8E8E8',
+            transform: menuOpen ? 'translateY(-6px) rotate(-45deg)' : 'none',
+            transition: 'transform 0.2s',
+          }}
+        />
+      </button>
+
+      {menuOpen && (
+        <div
+          className="site-nav-mobile-menu"
+          style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1.25rem',
+            padding: '1.5rem 2rem 2rem',
+            backgroundColor: '#0D0D0D',
+            borderBottom: '1px solid #1F1F1F',
+          }}
+        >
+          {links.map(({ anchor, label }) =>
+            isHome ? (
+              <a key={anchor} href={`#${anchor}`} style={linkStyle} onClick={closeMenu}>
+                {label}
+              </a>
+            ) : (
+              <Link key={anchor} href={`/#${anchor}`} style={linkStyle} onClick={closeMenu}>
+                {label}
+              </Link>
+            )
+          )}
+          {isHome ? (
+            <a href="#contact" style={{ ...ctaStyle, textAlign: 'center' }} onClick={closeMenu}>
+              say hi
+            </a>
+          ) : (
+            <Link href="/#contact" style={{ ...ctaStyle, textAlign: 'center' }} onClick={closeMenu}>
+              say hi
+            </Link>
+          )}
+        </div>
+      )}
     </nav>
   );
 }

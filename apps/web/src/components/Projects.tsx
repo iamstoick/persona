@@ -38,7 +38,13 @@ export function Projects({ projects = DEFAULT_PROJECTS }: Props) {
     >
       <TerminalHeading text="$ ls ./projects" />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gap: '1.5rem',
+        }}
+      >
         {projects.map((project) => (
           <TerminalCard key={project.id} project={project} />
         ))}
