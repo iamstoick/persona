@@ -142,7 +142,7 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
               gap: '1.5rem',
               marginBottom: '4rem',
             }}
@@ -248,6 +248,7 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
                 )}
                 <a
                   href={`/blog/${post.slug}`}
+                  className="blog-list-row"
                   style={{
                     display: 'grid',
                     gridTemplateColumns: '120px 1fr auto',
