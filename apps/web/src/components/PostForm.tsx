@@ -14,6 +14,7 @@ interface PostData {
   excerpt?: string;
   content?: Record<string, unknown> | null;
   featured_image_url?: string;
+  is_featured?: boolean;
   meta_title?: string;
   meta_description?: string;
 }
@@ -33,6 +34,7 @@ export function PostForm({ initial = {} }: Props) {
     title: initial.title || '',
     excerpt: initial.excerpt || '',
     featured_image_url: initial.featured_image_url || '',
+    is_featured: initial.is_featured ?? false,
     meta_title: initial.meta_title || '',
     meta_description: initial.meta_description || '',
     content: initial.content || null,
@@ -129,7 +131,16 @@ export function PostForm({ initial = {} }: Props) {
           <input style={{ ...inputStyle, marginBottom: '0.75rem', fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }} value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
 
           <label style={labelStyle}>Featured image URL</label>
-          <input style={inputStyle} value={form.featured_image_url} onChange={(e) => setForm({ ...form, featured_image_url: e.target.value })} />
+          <input style={{ ...inputStyle, marginBottom: '0.75rem' }} value={form.featured_image_url} onChange={(e) => setForm({ ...form, featured_image_url: e.target.value })} />
+
+          <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={form.is_featured}
+              onChange={(e) => setForm({ ...form, is_featured: e.target.checked })}
+            />
+            Featured post
+          </label>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>

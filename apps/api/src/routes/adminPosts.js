@@ -82,7 +82,7 @@ router.put('/:id', editorOrAdmin, async (req, res) => {
      WHERE id = $11
      RETURNING *`,
     [type, status, slug, title, excerpt, content ? JSON.stringify(content) : null,
-     featured_image_url, is_featured, meta_title, meta_description, req.params.id, status]
+     featured_image_url, is_featured || false, meta_title, meta_description, req.params.id, status]
   );
 
   if (!rows[0]) return res.status(404).json({ error: 'Not found' });
