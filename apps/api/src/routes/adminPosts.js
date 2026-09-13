@@ -37,15 +37,20 @@ router.post('/', editorOrAdmin, async (req, res) => {
   const { type, status, slug, title, excerpt, content, featured_image_url,
           is_featured, meta_title, meta_description } = req.body;
 
+  // $2 (status) and $12 carry the same value on purpose: reusing $2 inside the CASE below
+  // makes Postgres infer two different types for one parameter (the SET-list context wants
+  // the status column's varchar type, the string comparison wants text) and it refuses to
+  // run the query at all ("inconsistent types deduced for parameter"). A second, dedicated
+  // parameter sidesteps the ambiguity entirely.
   const { rows } = await pool.query(
     `INSERT INTO posts (type, status, slug, title, excerpt, content,
        featured_image_url, is_featured, author_id, meta_title, meta_description,
        published_at)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,
-       CASE WHEN $2 = 'published' THEN NOW() ELSE NULL END)
+       CASE WHEN $12 = 'published' THEN NOW() ELSE NULL END)
      RETURNING *`,
     [type, status || 'draft', slug, title, excerpt, content ? JSON.stringify(content) : null,
-     featured_image_url, is_featured || false, req.user.id, meta_title, meta_description]
+     featured_image_url, is_featured || false, req.user.id, meta_title, meta_description, status || 'draft']
   );
 
   await cacheDelPattern('cache:posts:*');
@@ -62,18 +67,22 @@ router.put('/:id', editorOrAdmin, async (req, res) => {
   const { type, status, slug, title, excerpt, content, featured_image_url,
           is_featured, meta_title, meta_description } = req.body;
 
+  // $2 (status) is deliberately duplicated as $12 — see the comment on the same pattern
+  // in the POST route above. This is the query that was actually failing: every edit save
+  // hit this "inconsistent types deduced for parameter $2" error and rolled back silently,
+  // so admin post edits never persisted despite the UI showing no error.
   const { rows } = await pool.query(
     `UPDATE posts SET
        type = $1, status = $2, slug = $3, title = $4, excerpt = $5,
        content = $6, featured_image_url = $7, is_featured = $8,
        meta_title = $9, meta_description = $10,
        published_at = CASE
-         WHEN $2 = 'published' AND published_at IS NULL THEN NOW()
+         WHEN $12 = 'published' AND published_at IS NULL THEN NOW()
          ELSE published_at END
      WHERE id = $11
      RETURNING *`,
     [type, status, slug, title, excerpt, content ? JSON.stringify(content) : null,
-     featured_image_url, is_featured, meta_title, meta_description, req.params.id]
+     featured_image_url, is_featured, meta_title, meta_description, req.params.id, status]
   );
 
   if (!rows[0]) return res.status(404).json({ error: 'Not found' });

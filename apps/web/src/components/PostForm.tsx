@@ -25,6 +25,7 @@ interface Props {
 export function PostForm({ initial = {} }: Props) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
     type: initial.type || 'post',
     status: initial.status || 'draft',
@@ -57,14 +58,24 @@ export function PostForm({ initial = {} }: Props) {
 
   async function save(status?: string) {
     setSaving(true);
+    setError(null);
     const body = { ...form, status: status || form.status };
     const method = initial.id ? 'PUT' : 'POST';
     const path = initial.id ? `/api/admin/posts/${initial.id}` : '/api/admin/posts';
 
-    const res = await authFetch(path, { method, body: JSON.stringify(body) }).catch(() => null);
-    setSaving(false);
-
-    if (res?.ok) router.push('/admin/posts');
+    try {
+      const res = await authFetch(path, { method, body: JSON.stringify(body) });
+      if (res.ok) {
+        router.push('/admin/posts');
+        return;
+      }
+      const data = await res.json().catch(() => null);
+      setError(data?.error || `Save failed (${res.status})`);
+    } catch {
+      setError('Save failed — check your connection and try again.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -122,6 +133,11 @@ export function PostForm({ initial = {} }: Props) {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          {error && (
+            <p style={{ color: '#FF4444', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', margin: 0 }}>
+              {error}
+            </p>
+          )}
           <button
             onClick={() => save('published')}
             disabled={saving}
