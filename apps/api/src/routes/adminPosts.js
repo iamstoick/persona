@@ -2,9 +2,12 @@ import { Router } from 'express';
 import { pool } from '../db/pool.js';
 import { requireRole } from '../middleware/requireAuth.js';
 import { cacheDelPattern } from '../cache/redis.js';
+import { purgeUrls } from '../cache/cloudflare.js';
 
 const router = Router();
 const editorOrAdmin = requireRole('editor', 'admin');
+const SITE_URL = process.env.FRONTEND_URL || 'http://localhost:8899';
+const postUrl = (slug) => `${SITE_URL}/blog/${slug}`;
 
 router.get('/', editorOrAdmin, async (req, res) => {
   const { type, status, page = '1', limit = '20', q } = req.query;
@@ -54,6 +57,7 @@ router.post('/', editorOrAdmin, async (req, res) => {
   );
 
   await cacheDelPattern('cache:posts:*');
+  await purgeUrls([postUrl(rows[0].slug)]);
   res.status(201).json(rows[0]);
 });
 
@@ -66,6 +70,9 @@ router.get('/:id', editorOrAdmin, async (req, res) => {
 router.put('/:id', editorOrAdmin, async (req, res) => {
   const { type, status, slug, title, excerpt, content, featured_image_url,
           is_featured, meta_title, meta_description } = req.body;
+
+  const { rows: existing } = await pool.query('SELECT slug FROM posts WHERE id = $1', [req.params.id]);
+  const oldSlug = existing[0]?.slug;
 
   // $2 (status) is deliberately duplicated as $12 — see the comment on the same pattern
   // in the POST route above. This is the query that was actually failing: every edit save
@@ -87,12 +94,19 @@ router.put('/:id', editorOrAdmin, async (req, res) => {
 
   if (!rows[0]) return res.status(404).json({ error: 'Not found' });
   await cacheDelPattern('cache:posts:*');
+  // Purge both slugs when the slug changed on this edit — the old URL should also stop
+  // serving a cached copy of content that no longer lives there.
+  await purgeUrls([postUrl(rows[0].slug), oldSlug ? postUrl(oldSlug) : null]);
   res.json(rows[0]);
 });
 
 router.delete('/:id', editorOrAdmin, async (req, res) => {
-  await pool.query("UPDATE posts SET status = 'archived' WHERE id = $1", [req.params.id]);
+  const { rows } = await pool.query(
+    "UPDATE posts SET status = 'archived' WHERE id = $1 RETURNING slug",
+    [req.params.id]
+  );
   await cacheDelPattern('cache:posts:*');
+  if (rows[0]) await purgeUrls([postUrl(rows[0].slug)]);
   res.json({ ok: true });
 });
 
