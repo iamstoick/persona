@@ -14,3 +14,4 @@ pgdata_prod/
 redisdata_prod/
 apps/api/uploads/
 certbot/
+*.tsbuildinfo
