@@ -17,6 +17,12 @@ function formatDate(iso: string | null) {
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://geraldvillorente.com';
 
+// Without this, Next.js renders a dynamic-segment page once (no generateStaticParams
+// here) and then caches that HTML indefinitely — an admin edit to the post's content
+// in the DB would never show up on this page again without a full redeploy. Same class
+// of bug already fixed on the homepage and /contact.
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   try {
