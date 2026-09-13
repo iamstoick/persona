@@ -8,14 +8,23 @@ export function isLoggedIn(): boolean {
   return document.cookie.split('; ').some((c) => c === 'gv_logged_in=1');
 }
 
+// Never force a Content-Type when the body is FormData (e.g. a file upload) — the browser
+// must set its own `multipart/form-data; boundary=...` header itself, and overriding it
+// makes the server unable to parse the request at all (it gets misread as an oversized
+// JSON body instead of a multipart upload).
+function buildHeaders(options: RequestInit) {
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+  return {
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+    ...(options.headers || {}),
+  };
+}
+
 export async function authFetch(path: string, options: RequestInit = {}) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${path}`, {
     ...options,
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
+    headers: buildHeaders(options),
   });
 
   if (res.status === 401 && isLoggedIn()) {
@@ -27,10 +36,7 @@ export async function authFetch(path: string, options: RequestInit = {}) {
       return fetch(`${process.env.NEXT_PUBLIC_API_URL}${path}`, {
         ...options,
         credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(options.headers || {}),
-        },
+        headers: buildHeaders(options),
       });
     }
   }
