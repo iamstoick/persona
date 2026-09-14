@@ -1,10 +1,12 @@
 'use client';
 
+import { useRef, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
+import { authFetch } from '@/lib/auth/client';
 
 interface Props {
   content?: Record<string, unknown> | null;
@@ -23,6 +25,10 @@ const TOOLBAR_BUTTONS = [
 ];
 
 export function TiptapEditor({ content, onChange }: Props) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -36,6 +42,30 @@ export function TiptapEditor({ content, onChange }: Props) {
     },
   });
 
+  async function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file later
+    if (!file || !editor) return;
+
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await authFetch('/api/admin/media', { method: 'POST', body: formData });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || `Upload failed (${res.status})`);
+      }
+      const media = await res.json();
+      editor.chain().focus().setImage({ src: media.url, alt: file.name }).run();
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  }
+
   const btnBase: React.CSSProperties = {
     padding: '0.25rem 0.6rem',
     backgroundColor: 'transparent',
@@ -48,7 +78,7 @@ export function TiptapEditor({ content, onChange }: Props) {
 
   return (
     <div style={{ border: '1px solid #1F1F1F', backgroundColor: '#141414' }}>
-      <div style={{ display: 'flex', gap: '0.25rem', padding: '0.5rem', borderBottom: '1px solid #1F1F1F', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '0.25rem', padding: '0.5rem', borderBottom: '1px solid #1F1F1F', flexWrap: 'wrap', alignItems: 'center' }}>
         {TOOLBAR_BUTTONS.map(({ label, command, title }) => (
           <button
             key={title}
@@ -60,6 +90,27 @@ export function TiptapEditor({ content, onChange }: Props) {
             {label}
           </button>
         ))}
+        <button
+          type="button"
+          title="Insert image"
+          disabled={uploading}
+          onClick={() => fileInputRef.current?.click()}
+          style={{ ...btnBase, opacity: uploading ? 0.5 : 1 }}
+        >
+          {uploading ? 'Uploading…' : '🖼 Image'}
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          onChange={handleFileSelected}
+          style={{ display: 'none' }}
+        />
+        {uploadError && (
+          <span style={{ color: '#FF4444', fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
+            {uploadError}
+          </span>
+        )}
       </div>
       <EditorContent
         editor={editor}
