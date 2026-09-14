@@ -66,8 +66,11 @@ function CourseOutlineInner() {
     );
   }
 
-  const totalLessons = course.phases.reduce((n, p) => n + p.lessons.length, 0);
-  const completedCount = course.phases.reduce((n, p) => n + p.lessons.filter((l) => l.completed).length, 0);
+  const allLessons = course.phases.flatMap((p) => p.lessons);
+  const totalLessons = allLessons.length;
+  const completedCount = allLessons.filter((l) => l.completed).length;
+  const progressPct = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+  const nextLesson = allLessons.find((l) => !l.completed) || allLessons[0];
 
   return (
     <div style={{ paddingTop: '80px', minHeight: '100vh' }}>
@@ -92,9 +95,34 @@ function CourseOutlineInner() {
         )}
 
         {course.authenticated ? (
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: '#63E6A0', marginBottom: '3rem' }}>
-            {completedCount} / {totalLessons} lessons completed
-          </p>
+          <div style={{ marginBottom: '3rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.5rem' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: '#63E6A0' }}>
+                {completedCount} / {totalLessons} lessons completed
+              </span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#888888' }}>{progressPct}%</span>
+            </div>
+            <div style={{ height: '6px', backgroundColor: '#1F1F1F', marginBottom: '1.25rem' }}>
+              <div style={{ height: '100%', width: `${progressPct}%`, backgroundColor: '#63E6A0', transition: 'width 0.3s' }} />
+            </div>
+            {nextLesson && (
+              <a
+                href={`/courses/${slug}/lessons/${nextLesson.id}`}
+                style={{
+                  display: 'inline-block',
+                  padding: '0.7rem 1.5rem',
+                  backgroundColor: '#63E6A0',
+                  color: '#0D0D0D',
+                  fontFamily: 'var(--font-space-grotesk)',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  textDecoration: 'none',
+                }}
+              >
+                {completedCount === 0 ? 'Start course →' : completedCount === totalLessons ? 'Review from the start →' : 'Continue →'}
+              </a>
+            )}
+          </div>
         ) : (
           <a
             href={loginHref}
