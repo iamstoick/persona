@@ -31,14 +31,17 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
     <div style={{ paddingTop: '80px', minHeight: '100vh' }}>
       {/* Hero featured post */}
       {featured && (
-        <section
+        <section style={{ padding: '4rem 2rem 0' }}>
+        <div
           style={{
             position: 'relative',
+            maxWidth: '1100px',
+            margin: '0 auto',
             minHeight: '420px',
             background: featured.featured_image_url ? undefined : 'linear-gradient(135deg, #141414 0%, #0D0D0D 100%)',
             display: 'flex',
             alignItems: 'flex-end',
-            padding: '4rem 2rem',
+            padding: '2rem',
             overflow: 'hidden',
           }}
         >
@@ -48,7 +51,7 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
                 src={featured.featured_image_url}
                 alt={featured.title}
                 fill
-                sizes="100vw"
+                sizes="(max-width: 1100px) 100vw, 1100px"
                 priority
                 style={{ objectFit: 'cover', zIndex: 0 }}
               />
@@ -133,6 +136,7 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
               </a>
             </div>
           </div>
+        </div>
         </section>
       )}
 
