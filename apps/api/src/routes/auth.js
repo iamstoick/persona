@@ -2,6 +2,7 @@ import { Router } from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
 import { redis } from '../cache/redis.js';
+import { requireAuth } from '../middleware/requireAuth.js';
 
 const router = Router();
 
@@ -111,6 +112,14 @@ router.post('/refresh', async (req, res) => {
   setAuthCookies(res, accessToken, newRefresh);
 
   res.json({ ok: true });
+});
+
+// Lets the frontend check who's actually logged in and what role they have — the
+// gv_logged_in cookie only says "some session exists," not who it belongs to. Used by
+// the admin UI to hide admin-only navigation from authenticated non-admin/editor users
+// (e.g. a course subscriber), even though the API itself already blocks their requests.
+router.get('/me', requireAuth, (req, res) => {
+  res.json({ id: req.user.id, email: req.user.email, role: req.user.role });
 });
 
 router.post('/logout', async (req, res) => {

@@ -24,9 +24,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   );
 }
 
+const ADMIN_ROLES = ['admin', 'editor'];
+
 function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [ready, setReady] = useState(false);
+  const [denied, setDenied] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn()) {
@@ -35,7 +38,18 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    setReady(true);
+    // Being logged in only proves there's a valid session — it says nothing about role.
+    // A course subscriber is fully authenticated but should never see the admin nav.
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`, { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((me) => {
+        if (me && ADMIN_ROLES.includes(me.role)) {
+          setReady(true);
+        } else {
+          setDenied(true);
+        }
+      })
+      .catch(() => setDenied(true));
   }, [pathname]);
 
   function logout() {
@@ -48,6 +62,20 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
         window.location.href = '/';
       });
   }
+
+  if (denied) return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', gap: '1rem', textAlign: 'center', padding: '2rem' }}>
+      <p style={{ color: '#E8E8E8', fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, fontSize: '1.1rem' }}>
+        You don&apos;t have access to this area.
+      </p>
+      <p style={{ color: '#888888', fontFamily: 'var(--font-mono)', fontSize: '0.85rem', maxWidth: '360px' }}>
+        This account is signed in but isn&apos;t an editor or admin. If you think this is a mistake, contact the site owner.
+      </p>
+      <a href="/" style={{ color: '#63E6A0', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
+        ← Back to the site
+      </a>
+    </div>
+  );
 
   if (!ready) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', color: '#888888', fontFamily: 'var(--font-mono)' }}>
