@@ -12,6 +12,16 @@ interface Course {
   sort_order: number;
 }
 
+interface Feedback {
+  id: string;
+  rating: number;
+  missing_topics: string | null;
+  improvements: string | null;
+  user_name: string;
+  user_email: string;
+  created_at: string;
+}
+
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '0.6rem 0.85rem',
@@ -37,6 +47,9 @@ export default function AdminCoursesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ title: '', description: '', status: 'published' as 'draft' | 'published', sort_order: 0 });
   const [saving, setSaving] = useState(false);
+  const [feedbackForId, setFeedbackForId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<Feedback[]>([]);
+  const [loadingFeedback, setLoadingFeedback] = useState(false);
 
   function load() {
     authFetch('/api/admin/courses')
@@ -50,6 +63,20 @@ export default function AdminCoursesPage() {
   function startEdit(c: Course) {
     setEditingId(c.id);
     setForm({ title: c.title, description: c.description || '', status: c.status, sort_order: c.sort_order });
+  }
+
+  function toggleFeedback(courseId: string) {
+    if (feedbackForId === courseId) {
+      setFeedbackForId(null);
+      return;
+    }
+    setFeedbackForId(courseId);
+    setLoadingFeedback(true);
+    authFetch(`/api/admin/courses/${courseId}/feedback`)
+      .then((r) => r.json())
+      .then((data) => setFeedback(Array.isArray(data) ? data : []))
+      .catch(() => setFeedback([]))
+      .finally(() => setLoadingFeedback(false));
   }
 
   async function save() {
@@ -133,16 +160,56 @@ export default function AdminCoursesPage() {
       <div style={{ backgroundColor: '#141414', border: '1px solid #1F1F1F' }}>
         {courses.length === 0 && <p style={{ padding: '1.5rem', color: '#888888', margin: 0 }}>No courses yet.</p>}
         {courses.map((c, i) => (
-          <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem 1.25rem', borderBottom: i < courses.length - 1 ? '1px solid #1F1F1F' : 'none' }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ color: '#E8E8E8', fontWeight: 700, fontSize: '0.9rem' }}>{c.title}</div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: c.status === 'published' ? '#63E6A0' : '#888888', marginTop: '0.25rem' }}>
-                {c.status} · /courses/{c.slug}
+          <div key={c.id} style={{ borderBottom: i < courses.length - 1 ? '1px solid #1F1F1F' : 'none' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem 1.25rem' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ color: '#E8E8E8', fontWeight: 700, fontSize: '0.9rem' }}>{c.title}</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: c.status === 'published' ? '#63E6A0' : '#888888', marginTop: '0.25rem' }}>
+                  {c.status} · /courses/{c.slug}
+                </div>
               </div>
+              <button onClick={() => toggleFeedback(c.id)} style={{ background: 'none', border: 'none', color: '#888888', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', cursor: 'pointer' }}>
+                {feedbackForId === c.id ? 'Hide feedback' : 'Feedback'}
+              </button>
+              <button onClick={() => startEdit(c)} style={{ background: 'none', border: 'none', color: '#63E6A0', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', cursor: 'pointer' }}>
+                Edit
+              </button>
             </div>
-            <button onClick={() => startEdit(c)} style={{ background: 'none', border: 'none', color: '#63E6A0', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', cursor: 'pointer' }}>
-              Edit
-            </button>
+
+            {feedbackForId === c.id && (
+              <div style={{ padding: '0 1.25rem 1.25rem', backgroundColor: '#0D0D0D' }}>
+                {loadingFeedback && <p style={{ color: '#888888', fontSize: '0.8rem' }}>Loading…</p>}
+                {!loadingFeedback && feedback.length === 0 && (
+                  <p style={{ color: '#888888', fontSize: '0.8rem', margin: 0 }}>No feedback submitted yet.</p>
+                )}
+                {!loadingFeedback && feedback.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', paddingTop: '1rem' }}>
+                    {feedback.map((f) => (
+                      <div key={f.id} style={{ border: '1px solid #1F1F1F', padding: '0.85rem 1rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                          <span style={{ color: '#63E6A0', fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
+                            {'★'.repeat(f.rating)}{'☆'.repeat(5 - f.rating)}
+                          </span>
+                          <span style={{ color: '#888888', fontFamily: 'var(--font-mono)', fontSize: '0.7rem' }}>
+                            {f.user_name} · {new Date(f.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                        {f.missing_topics && (
+                          <p style={{ color: '#E8E8E8', fontSize: '0.8rem', margin: '0.35rem 0' }}>
+                            <strong>Missing:</strong> {f.missing_topics}
+                          </p>
+                        )}
+                        {f.improvements && (
+                          <p style={{ color: '#E8E8E8', fontSize: '0.8rem', margin: '0.35rem 0' }}>
+                            <strong>Improve:</strong> {f.improvements}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ))}
       </div>

@@ -107,4 +107,41 @@ router.delete('/:slug/lessons/:lessonId/complete', requireAuth, async (req, res)
   res.json({ ok: true });
 });
 
+// Lets the frontend check whether the signed-in user has already left feedback for this
+// course, so the "you finished — tell us what to improve" form only shows once.
+router.get('/:slug/feedback/me', requireAuth, async (req, res) => {
+  const { rows } = await pool.query(
+    `SELECT cf.* FROM course_feedback cf
+     JOIN courses c ON c.id = cf.course_id
+     WHERE c.slug = $1 AND cf.user_id = $2`,
+    [req.params.slug, req.user.id]
+  );
+  res.json(rows[0] || null);
+});
+
+router.post('/:slug/feedback', requireAuth, async (req, res) => {
+  const { rating, missing_topics, improvements } = req.body;
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    return res.status(400).json({ error: 'rating must be an integer from 1 to 5' });
+  }
+
+  const { rows: courseRows } = await pool.query('SELECT id FROM courses WHERE slug = $1', [req.params.slug]);
+  const course = courseRows[0];
+  if (!course) return res.status(404).json({ error: 'Not found' });
+
+  const { rows } = await pool.query(
+    `INSERT INTO course_feedback (course_id, user_id, rating, missing_topics, improvements)
+     VALUES ($1, $2, $3, $4, $5)
+     ON CONFLICT (course_id, user_id) DO UPDATE SET
+       rating = EXCLUDED.rating,
+       missing_topics = EXCLUDED.missing_topics,
+       improvements = EXCLUDED.improvements,
+       updated_at = NOW()
+     RETURNING *`,
+    [course.id, req.user.id, rating, missing_topics || null, improvements || null]
+  );
+
+  res.status(201).json(rows[0]);
+});
+
 export default router;

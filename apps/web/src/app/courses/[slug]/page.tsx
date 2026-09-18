@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import type { CourseDetail } from '@/lib/api';
+import { CourseFeedbackForm } from '@/components/CourseFeedbackForm';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
@@ -140,6 +141,10 @@ function CourseOutlineInner() {
           >
             Sign in with Google to start
           </a>
+        )}
+
+        {course.authenticated && totalLessons > 0 && completedCount === totalLessons && (
+          <CourseFeedbackForm slug={slug} />
         )}
 
         {course.phases.map((phase, phaseIndex) => (

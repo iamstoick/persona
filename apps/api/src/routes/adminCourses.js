@@ -29,4 +29,16 @@ router.put('/:id', editorOrAdmin, async (req, res) => {
   res.json(rows[0]);
 });
 
+router.get('/:id/feedback', editorOrAdmin, async (req, res) => {
+  const { rows } = await pool.query(
+    `SELECT cf.*, u.name AS user_name, u.email AS user_email
+     FROM course_feedback cf
+     JOIN users u ON u.id = cf.user_id
+     WHERE cf.course_id = $1
+     ORDER BY cf.created_at DESC`,
+    [req.params.id]
+  );
+  res.json(rows);
+});
+
 export default router;
