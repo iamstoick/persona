@@ -17,10 +17,22 @@ interface Post {
   updated_at: string;
 }
 
+interface StudentProgress {
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  course_id: string;
+  course_title: string;
+  completed_lessons: string;
+  total_lessons: string;
+  last_activity: string;
+}
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats>({ total: 0, draft: 0, published: 0 });
   const [recent, setRecent] = useState<Post[]>([]);
   const [chartData, setChartData] = useState<{ date: string; count: number }[]>([]);
+  const [progress, setProgress] = useState<StudentProgress[]>([]);
 
   useEffect(() => {
     authFetch('/api/admin/posts')
@@ -48,6 +60,11 @@ export default function AdminDashboard() {
         setChartData(Object.entries(days).map(([date, count]) => ({ date: date.slice(5), count })));
       })
       .catch(() => {});
+
+    authFetch('/api/admin/courses/progress')
+      .then((r) => r.json())
+      .then((data: StudentProgress[]) => setProgress(Array.isArray(data) ? data : []))
+      .catch(() => setProgress([]));
   }, []);
 
   const STAT_CARDS = [
@@ -103,6 +120,36 @@ export default function AdminDashboard() {
             </span>
           </div>
         ))}
+      </div>
+
+      <div style={{ backgroundColor: '#141414', border: '1px solid #1F1F1F', padding: '1.5rem', marginTop: '2rem' }}>
+        <h2 style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: '1rem', fontWeight: 700, color: '#E8E8E8', marginBottom: '1rem' }}>
+          Student progress
+        </h2>
+        {progress.length === 0 && (
+          <p style={{ color: '#888888', fontSize: '0.85rem', margin: 0 }}>No one has started a course yet.</p>
+        )}
+        {progress.map((p) => {
+          const completed = parseInt(p.completed_lessons, 10);
+          const total = parseInt(p.total_lessons, 10);
+          const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+          return (
+            <div key={`${p.user_id}-${p.course_id}`} style={{ padding: '0.85rem 0', borderBottom: '1px solid #1F1F1F' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.4rem' }}>
+                <span style={{ color: '#E8E8E8', fontSize: '0.9rem' }}>
+                  {p.user_name} <span style={{ color: '#888888', fontSize: '0.75rem' }}>({p.user_email})</span>
+                </span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: pct === 100 ? '#63E6A0' : '#888888' }}>
+                  {completed}/{total} · {pct}%
+                </span>
+              </div>
+              <p style={{ color: '#888888', fontSize: '0.8rem', margin: '0 0 0.4rem' }}>{p.course_title}</p>
+              <div style={{ height: '5px', backgroundColor: '#0D0D0D' }}>
+                <div style={{ height: '100%', width: `${pct}%`, backgroundColor: pct === 100 ? '#63E6A0' : '#63E6A088' }} />
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

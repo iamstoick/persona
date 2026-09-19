@@ -29,6 +29,30 @@ router.put('/:id', editorOrAdmin, async (req, res) => {
   res.json(rows[0]);
 });
 
+// One row per (student, course) they've made any progress in, with completed/total
+// lesson counts — used by the admin dashboard's "student progress" view. Only lists
+// students who've actually started a course, not every registered user.
+router.get('/progress', editorOrAdmin, async (_req, res) => {
+  const { rows } = await pool.query(
+    `SELECT
+       u.id AS user_id, u.name AS user_name, u.email AS user_email,
+       c.id AS course_id, c.title AS course_title,
+       COUNT(DISTINCT cp.lesson_id) AS completed_lessons,
+       (SELECT COUNT(*) FROM course_lessons cl2
+        JOIN course_phases cph2 ON cph2.id = cl2.phase_id
+        WHERE cph2.course_id = c.id) AS total_lessons,
+       MAX(cp.completed_at) AS last_activity
+     FROM course_progress cp
+     JOIN users u ON u.id = cp.user_id
+     JOIN course_lessons cl ON cl.id = cp.lesson_id
+     JOIN course_phases cph ON cph.id = cl.phase_id
+     JOIN courses c ON c.id = cph.course_id
+     GROUP BY u.id, u.name, u.email, c.id, c.title
+     ORDER BY u.name ASC, c.title ASC`
+  );
+  res.json(rows);
+});
+
 router.get('/:id/feedback', editorOrAdmin, async (req, res) => {
   const { rows } = await pool.query(
     `SELECT cf.*, u.name AS user_name, u.email AS user_email
