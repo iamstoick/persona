@@ -2,9 +2,12 @@ import { Router } from 'express';
 import { pool } from '../db/pool.js';
 import { requireRole } from '../middleware/requireAuth.js';
 import { cacheDelPattern } from '../cache/redis.js';
+import { purgeUrls } from '../cache/cloudflare.js';
 
 const router = Router();
 const editorOrAdmin = requireRole('editor', 'admin');
+const SITE_URL = process.env.FRONTEND_URL || 'http://localhost:8899';
+const courseUrl = (slug) => `${SITE_URL}/courses/${slug}`;
 
 router.get('/', editorOrAdmin, async (_req, res) => {
   const { rows } = await pool.query('SELECT * FROM courses ORDER BY sort_order ASC, created_at ASC');
@@ -26,6 +29,7 @@ router.put('/:id', editorOrAdmin, async (req, res) => {
 
   if (!rows[0]) return res.status(404).json({ error: 'Not found' });
   await cacheDelPattern('cache:courses:*');
+  await purgeUrls([courseUrl(rows[0].slug)]);
   res.json(rows[0]);
 });
 
