@@ -17,6 +17,8 @@ interface PostData {
   is_featured?: boolean;
   meta_title?: string;
   meta_description?: string;
+  categories?: string[];
+  tags?: string[];
 }
 
 interface Props {
@@ -37,6 +39,8 @@ export function PostForm({ initial = {} }: Props) {
     is_featured: initial.is_featured ?? false,
     meta_title: initial.meta_title || '',
     meta_description: initial.meta_description || '',
+    categories: (initial.categories || []).join(', '),
+    tags: (initial.tags || []).join(', '),
     content: initial.content || null,
   });
 
@@ -96,6 +100,17 @@ export function PostForm({ initial = {} }: Props) {
         <div>
           <label style={labelStyle}>Excerpt</label>
           <textarea style={{ ...inputStyle, minHeight: '80px', resize: 'vertical' }} value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} />
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div>
+            <label style={labelStyle}>Categories (comma-separated)</label>
+            <input style={inputStyle} value={form.categories} onChange={(e) => setForm({ ...form, categories: e.target.value })} placeholder="ai, engineering" />
+          </div>
+          <div>
+            <label style={labelStyle}>Tags (comma-separated)</label>
+            <input style={inputStyle} value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} placeholder="claude-code, llm" />
+          </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
