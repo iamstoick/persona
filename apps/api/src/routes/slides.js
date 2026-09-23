@@ -41,7 +41,11 @@ router.get('/:slug', requireAuth, async (req, res) => {
     [deck.id]
   );
 
-  res.json({ ...deck, slides });
+  // Speaker notes are visible to admins only — regular members get the slide
+  // content without them. (The admin management API still serves notes to
+  // editor/admin roles so authors can write them.)
+  const isAdmin = req.user?.role === 'admin';
+  res.json({ ...deck, slides: slides.map((s) => ({ ...s, notes: isAdmin ? s.notes : null })) });
 });
 
 export default router;
