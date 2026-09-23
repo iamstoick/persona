@@ -107,6 +107,27 @@ export interface CourseDetail extends Course {
   authenticated: boolean;
 }
 
+export interface SlideDeck {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  slide_count: number;
+  sort_order: number;
+}
+
+export interface Slide {
+  id: string;
+  title: string;
+  content: Record<string, unknown> | null;
+  notes: string | null;
+  sort_order: number;
+}
+
+export interface SlideDeckDetail extends SlideDeck {
+  slides: Slide[];
+}
+
 export interface CourseLessonFull {
   id: string;
   title: string;

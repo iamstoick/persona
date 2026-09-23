@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { href: '/admin/projects', label: 'Projects' },
   { href: '/admin/services', label: 'Services' },
   { href: '/admin/courses', label: 'Courses' },
+  { href: '/admin/slides', label: 'Slides' },
   { href: '/admin/posts', label: 'Posts' },
   { href: '/admin/media', label: 'Media' },
   { href: '/admin/menus', label: 'Menus' },

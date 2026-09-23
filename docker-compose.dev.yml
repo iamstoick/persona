@@ -1,0 +1,89 @@
+# Development stack — local use only, never on the production server.
+# All ports bind to 127.0.0.1, so even an accidental run on a shared host
+# cannot expose dev Postgres/Redis to the open internet.
+# Run with: docker compose -f docker-compose.dev.yml up --build (or: npm run dev)
+name: gv-dev
+
+services:
+  postgres:
+    image: postgres:18.3
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-gv_db}
+      POSTGRES_USER: ${POSTGRES_USER:-gv_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - pgdata_dev:/var/lib/postgresql
+    networks:
+      - gv_dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gv_user}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8.8.0-alpine
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redisdata_dev:/data
+    networks:
+      - gv_dev
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile.dev
+    env_file: .env
+    environment:
+      NODE_ENV: development
+      POSTGRES_HOST: postgres
+      REDIS_URL: redis://redis:6379
+      FRONTEND_URL: http://localhost:8899
+    ports:
+      - "127.0.0.1:4000:4000"
+    volumes:
+      - ./apps/api/src:/app/src
+      - ./apps/api/uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - gv_dev
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile.dev
+    env_file: .env
+    environment:
+      NODE_ENV: development
+      PORT: 8899
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+      API_INTERNAL_URL: http://api:4000
+      NEXT_PUBLIC_SITE_URL: http://localhost:8899
+    ports:
+      - "127.0.0.1:8899:8899"
+    volumes:
+      - ./apps/web/src:/app/src
+    depends_on:
+      - api
+    networks:
+      - gv_dev
+
+volumes:
+  pgdata_dev:
+  redisdata_dev:
+
+networks:
+  gv_dev:
+    driver: bridge

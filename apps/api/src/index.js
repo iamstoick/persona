@@ -26,6 +26,8 @@ import servicesRoutes from './routes/services.js';
 import adminServicesRoutes from './routes/adminServices.js';
 import coursesRoutes from './routes/courses.js';
 import adminCoursesRoutes from './routes/adminCourses.js';
+import slidesRoutes from './routes/slides.js';
+import adminSlidesRoutes from './routes/adminSlides.js';
 
 const MISSING_VARS = ['JWT_SECRET', 'JWT_REFRESH_SECRET', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET']
   .filter((k) => !process.env[k]);
@@ -59,6 +61,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/projects', projectsRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/courses', coursesRoutes);
+app.use('/api/slides', slidesRoutes);
 app.use('/api/admin/posts', adminPostsRoutes);
 app.use('/api/admin/media', adminMediaRoutes);
 app.use('/api/admin/users', adminUsersRoutes);
@@ -66,6 +69,7 @@ app.use('/api/admin/settings', adminSettingsRoutes);
 app.use('/api/admin/projects', adminProjectsRoutes);
 app.use('/api/admin/services', adminServicesRoutes);
 app.use('/api/admin/courses', adminCoursesRoutes);
+app.use('/api/admin/slides', adminSlidesRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);

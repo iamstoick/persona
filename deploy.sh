@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Deploys the production stack. Run this on the production server from the repo root
 # (/opt/geraldvillorente). Always pins the compose files explicitly — a bare
-# `docker compose up` falls back to docker-compose.yml (the dev config), whose
-# postgres/web port bindings can collide with other containers on this shared host.
+# `docker compose ...` fails by design (docker-compose.yml is a guard stub), and
+# the dev stack (docker-compose.dev.yml) must never run on this shared host.
 set -euo pipefail
 
 cd "$(dirname "$0")"

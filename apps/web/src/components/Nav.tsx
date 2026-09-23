@@ -10,6 +10,7 @@ const links = [
   { anchor: 'writing', label: 'Writing' },
   { anchor: 'services', label: 'Services' },
   { anchor: 'courses', label: 'Courses' },
+  { anchor: 'slides', label: 'Slides' },
 ];
 
 const linkStyle: React.CSSProperties = {

@@ -4,9 +4,10 @@ import { Projects } from '@/components/Projects';
 import { Writing } from '@/components/Writing';
 import { Services } from '@/components/Services';
 import { Courses } from '@/components/Courses';
+import { Slides } from '@/components/Slides';
 import { Contact } from '@/components/Contact';
 import { Footer } from '@/components/Footer';
-import { apiFetch, Post, PostsResponse, SiteSettings, Project, Service, Course } from '@/lib/api';
+import { apiFetch, Post, PostsResponse, SiteSettings, Project, Service, Course, SlideDeck } from '@/lib/api';
 
 // Render on every request rather than prerendering at build time: `next build` runs in
 // a stage with no network route to the api container, so a build-time ISR snapshot of
@@ -16,7 +17,7 @@ import { apiFetch, Post, PostsResponse, SiteSettings, Project, Service, Course }
 export const dynamic = 'force-dynamic';
 
 async function getHomeData() {
-  const [postsResult, settings, projects, services, courses] = await Promise.all([
+  const [postsResult, settings, projects, services, courses, decks] = await Promise.all([
     Promise.all([
       apiFetch<Post>('/api/posts/featured'),
       apiFetch<PostsResponse>('/api/posts?type=post&status=published&limit=3'),
@@ -27,13 +28,14 @@ async function getHomeData() {
     apiFetch<Project[]>('/api/projects').catch(() => undefined),
     apiFetch<Service[]>('/api/services').catch(() => undefined),
     apiFetch<Course[]>('/api/courses').catch(() => undefined),
+    apiFetch<SlideDeck[]>('/api/slides').catch(() => undefined),
   ]);
 
-  return { ...postsResult, settings, projects, services, courses };
+  return { ...postsResult, settings, projects, services, courses, decks };
 }
 
 export default async function HomePage() {
-  const { featured, posts, settings, projects, services, courses } = await getHomeData();
+  const { featured, posts, settings, projects, services, courses, decks } = await getHomeData();
 
   return (
     <>
@@ -43,6 +45,7 @@ export default async function HomePage() {
       <Writing featured={featured} posts={posts} />
       <Services services={services} />
       <Courses courses={courses} />
+      <Slides decks={decks} />
       <Contact
         email={settings.contact?.email}
         headline={settings.contact?.headline}

@@ -15,11 +15,11 @@ Personal site for Gerald Villorente — Drupal/DevOps engineer and technical lea
 cp .env.example .env
 # Edit .env — set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SMTP_* if needed
 
-# 2. Start all services
-docker compose up --build
+# 2. Start all services (or: npm run dev)
+docker compose -f docker-compose.dev.yml up --build
 
 # 3. Run migrations (first time only)
-docker compose exec api node -e "
+docker compose -f docker-compose.dev.yml exec api node -e "
   import('@gv/db/migrate.js')
 " 
 # Or from the host (requires local pg connection):
@@ -47,7 +47,7 @@ npm run migrate --workspace=packages/db
 
 Inside the api container:
 ```bash
-docker compose exec api sh
+docker compose -f docker-compose.dev.yml exec api sh
 # Then:
 cd /app && node ../../packages/db/migrate.js
 ```
@@ -84,7 +84,8 @@ geraldvillorente.com/
 │   └── db/               SQL migrations + migrate.js + seed.js
 ├── docker/
 │   └── nginx/            Production reverse proxy config
-├── docker-compose.yml         Development
+├── docker-compose.yml         Guard stub (bare `docker compose` fails here on purpose)
+├── docker-compose.dev.yml     Development
 ├── docker-compose.prod.yml    Production
 └── VERSIONS.md
 ```
@@ -105,7 +106,8 @@ After authenticating via Google OAuth:
 ## Production deployment
 
 ```bash
-# On your server, copy files and set production env vars in .env
+# On the production server, deploy with ./deploy.sh — it pulls main, pins the
+# prod compose files, and purges Cloudflare cache. Manual equivalent:
 
 docker compose -f docker-compose.prod.yml up -d --build
 

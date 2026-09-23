@@ -254,3 +254,28 @@ body {
     animation: none !important;
   }
 }
+
+/* Slide presenter: article prose scaled up for stage reading. */
+.slide-body {
+  max-width: 72ch;
+  font-size: clamp(1.15rem, 2.2vw, 1.45rem);
+  line-height: 1.75;
+}
+
+.slide-body ul,
+.slide-body ol {
+  gap: 1rem;
+}
+
+.slide-body li::marker {
+  color: var(--color-accent);
+}
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-enter {
+  animation: slide-in 0.25s ease-out;
+}
