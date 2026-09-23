@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { authFetch } from '@/lib/auth/client';
 
 interface Course {
@@ -50,6 +50,16 @@ export default function AdminCoursesPage() {
   const [feedbackForId, setFeedbackForId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Feedback[]>([]);
   const [loadingFeedback, setLoadingFeedback] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
+
+  // The form renders above the list: bring it into view (and focus it) when
+  // editing starts, otherwise it can open outside the viewport unnoticed.
+  useEffect(() => {
+    if (!editingId) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    formRef.current?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+    formRef.current?.querySelector('input')?.focus({ preventScroll: true });
+  }, [editingId]);
 
   function load() {
     authFetch('/api/admin/courses')
@@ -61,6 +71,11 @@ export default function AdminCoursesPage() {
   useEffect(load, []);
 
   function startEdit(c: Course) {
+    // Toggle: clicking the row already being edited closes its form.
+    if (editingId === c.id) {
+      setEditingId(null);
+      return;
+    }
     setEditingId(c.id);
     setForm({ title: c.title, description: c.description || '', status: c.status, sort_order: c.sort_order });
   }
@@ -104,7 +119,7 @@ export default function AdminCoursesPage() {
       </div>
 
       {editingId && (
-        <div style={{ backgroundColor: '#141414', border: '1px solid #1F1F1F', padding: '1.5rem', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div ref={formRef} style={{ backgroundColor: '#141414', border: '1px solid #1F1F1F', padding: '1.5rem', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div>
             <label style={labelStyle}>Title</label>
             <input style={inputStyle} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
@@ -172,7 +187,7 @@ export default function AdminCoursesPage() {
                 {feedbackForId === c.id ? 'Hide feedback' : 'Feedback'}
               </button>
               <button onClick={() => startEdit(c)} style={{ background: 'none', border: 'none', color: '#63E6A0', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', cursor: 'pointer' }}>
-                Edit
+                {editingId === c.id ? 'Close' : 'Edit'}
               </button>
             </div>
 

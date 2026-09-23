@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { authFetch } from '@/lib/auth/client';
 
 interface SlideDeck {
@@ -43,6 +43,16 @@ export default function AdminSlidesPage() {
     sort_order: 0,
   });
   const [saving, setSaving] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
+
+  // The form renders above the list: bring it into view (and focus it) when
+  // editing starts, otherwise it can open outside the viewport unnoticed.
+  useEffect(() => {
+    if (!editingId) return;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    formRef.current?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+    formRef.current?.querySelector('input')?.focus({ preventScroll: true });
+  }, [editingId]);
 
   function load() {
     authFetch('/api/admin/slides')
@@ -54,6 +64,11 @@ export default function AdminSlidesPage() {
   useEffect(load, []);
 
   function startEdit(d: SlideDeck) {
+    // Toggle: clicking the row already being edited closes its form.
+    if (editingId === d.id) {
+      setEditingId(null);
+      return;
+    }
     setEditingId(d.id);
     setForm({
       title: d.title,
@@ -100,6 +115,7 @@ export default function AdminSlidesPage() {
 
       {editingId && (
         <div
+          ref={formRef}
           style={{
             backgroundColor: '#141414',
             border: '1px solid #1F1F1F',
@@ -225,7 +241,7 @@ export default function AdminSlidesPage() {
                 cursor: 'pointer',
               }}
             >
-              Edit
+              {editingId === d.id ? 'Close' : 'Edit'}
             </button>
           </div>
         ))}
