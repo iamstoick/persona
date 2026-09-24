@@ -6,6 +6,8 @@ import { Services } from '@/components/Services';
 import { Courses } from '@/components/Courses';
 import { Slides } from '@/components/Slides';
 import { Contact } from '@/components/Contact';
+import { Faq } from '@/components/Faq';
+import { Positioning } from '@/components/Positioning';
 import { Footer } from '@/components/Footer';
 import { apiFetch, Post, PostsResponse, SiteSettings, Project, Service, Course, SlideDeck } from '@/lib/api';
 
@@ -40,12 +42,14 @@ export default async function HomePage() {
   return (
     <>
       <Hero badge={settings.hero?.badge} tagline={settings.hero?.tagline} />
+      <Positioning />
       <Skills careerStart={settings.skills?.careerStart} groups={settings.skills?.groups} />
       <Projects projects={projects} />
       <Writing featured={featured} posts={posts} />
       <Services services={services} />
       <Courses courses={courses} />
       <Slides decks={decks} />
+      <Faq />
       <Contact
         email={settings.contact?.email}
         headline={settings.contact?.headline}

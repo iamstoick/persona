@@ -1,22 +1,30 @@
-'use client';
-
-import { useEffect, useState } from 'react';
+import type { Metadata } from 'next';
 import { apiFetch, Service } from '@/lib/api';
 import { TerminalHeading } from '@/components/TerminalHeading';
 
-export default function ServicesPage() {
-  const [services, setServices] = useState<Service[]>([]);
+export const metadata: Metadata = {
+  title: 'Services',
+  description:
+    'Hire a Filipino software engineer: Drupal development, DevOps and platform engineering, AI engineering, and technical support leadership. Consulting and staff augmentation.',
+  alternates: { canonical: '/services' },
+};
 
-  useEffect(() => {
-    apiFetch<Service[]>('/api/services')
-      .then((data) => setServices(Array.isArray(data) ? data : []))
-      .catch(() => setServices([]));
-  }, []);
+// Server-rendered (was client-side fetch): crawlers get the service list in the
+// initial HTML instead of an empty grid that only fills in after hydration.
+export const dynamic = 'force-dynamic';
+
+export default async function ServicesPage() {
+  const services = await apiFetch<Service[]>('/api/services').catch(() => [] as Service[]);
 
   return (
     <div style={{ paddingTop: '80px', minHeight: '100vh' }}>
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '4rem 2rem' }}>
         <TerminalHeading text="$ ls ./services" />
+
+        <p style={{ color: '#888888', lineHeight: 1.7, marginBottom: '2.5rem', maxWidth: '640px' }}>
+          Consulting and staff augmentation from a Filipino software engineer based in
+          the Philippines, working remotely worldwide.
+        </p>
 
         <div
           style={{
@@ -45,6 +53,7 @@ export default function ServicesPage() {
                   fontSize: '1.1rem',
                   fontWeight: 700,
                   color: '#E8E8E8',
+                  margin: 0,
                 }}
               >
                 {svc.title}

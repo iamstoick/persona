@@ -140,7 +140,7 @@ export function Hero({ badge = DEFAULT_BADGE, tagline = DEFAULT_TAGLINE }: Props
       <div className="hero-portrait" style={{ position: 'absolute', right: 0, bottom: 0, width: '320px', height: '85%', zIndex: 1 }}>
         <Image
           src="/images/hero-portrait.png"
-          alt="Gerald Villorente"
+          alt="Gerald Villorente, Filipino software engineer"
           fill
           priority
           sizes="320px"

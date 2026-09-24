@@ -1,5 +1,13 @@
+import type { Metadata } from 'next';
 import { apiFetch, SiteSettings } from '@/lib/api';
 import { ContactForm } from '@/components/ContactForm';
+
+export const metadata: Metadata = {
+  title: 'Contact',
+  description:
+    'Hire a Filipino software engineer: Drupal development, DevOps, AI engineering, and technical support leadership. Consulting and staff augmentation, remote worldwide.',
+  alternates: { canonical: '/contact' },
+};
 
 // Render on every request: a build-time fetch here (during `next build`, which has no
 // network route to the api container) would bake in the fallback defaults below
@@ -43,7 +51,8 @@ export default async function ContactPage() {
 
         <p style={{ color: '#888888', lineHeight: 1.7, marginBottom: '3rem', maxWidth: '480px' }}>
           Open to consulting, staff augmentation, speaking invitations, and interesting technical
-          conversations. Response time is usually within two business days.
+          conversations. Based in the Philippines, working remotely worldwide — response time is
+          usually within two business days.
         </p>
 
         <ContactForm email={email} />

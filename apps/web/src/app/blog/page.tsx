@@ -1,5 +1,13 @@
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import { apiFetch, Post, PostsResponse } from '@/lib/api';
+
+export const metadata: Metadata = {
+  title: 'Blog',
+  description:
+    'Writing on Drupal, DevOps, AI engineering, and vibe coding by Gerald Villorente, Filipino software engineer based in the Philippines.',
+  alternates: { canonical: '/blog' },
+};
 
 function formatDate(iso: string | null) {
   if (!iso) return '';

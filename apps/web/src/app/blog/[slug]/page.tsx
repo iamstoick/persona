@@ -37,6 +37,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         title,
         description,
         type: 'article',
+        publishedTime: post.published_at || undefined,
+        authors: [post.author_name || 'Gerald Villorente'],
         url: `${siteUrl}/blog/${slug}`,
         // Only set when a photo exists — otherwise the file-based card
         // (opengraph-image.tsx) applies. An explicit `images: undefined` key risks

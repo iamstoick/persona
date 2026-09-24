@@ -49,6 +49,12 @@ export function Services({ services = DEFAULT_SERVICES }: Props) {
         Services
       </h2>
 
+      <p style={{ color: '#888888', fontSize: '0.95rem', lineHeight: 1.7, margin: '-1.5rem 0 2.5rem', maxWidth: '640px' }}>
+        Consulting and staff augmentation from a Filipino software engineer: Drupal
+        development, DevOps and platform engineering, AI engineering, and technical
+        support leadership.
+      </p>
+
       <div
         style={{
           display: 'grid',
