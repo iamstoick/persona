@@ -75,6 +75,7 @@ services:
       - "127.0.0.1:8899:8899"
     volumes:
       - ./apps/web/src:/app/src
+      - ./apps/web/public:/app/public
     depends_on:
       - api
     networks:
