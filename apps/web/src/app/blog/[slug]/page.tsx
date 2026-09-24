@@ -38,7 +38,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         description,
         type: 'article',
         url: `${siteUrl}/blog/${slug}`,
-        images: post.featured_image_url ? [post.featured_image_url] : undefined,
+        // Only set when a photo exists — otherwise the file-based card
+        // (opengraph-image.tsx) applies. An explicit `images: undefined` key risks
+        // suppressing it.
+        ...(post.featured_image_url ? { images: [post.featured_image_url] } : {}),
       },
       twitter: {
         card: 'summary_large_image',
