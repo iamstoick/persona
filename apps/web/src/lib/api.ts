@@ -120,7 +120,7 @@ export interface Slide {
   id: string;
   title: string;
   content: Record<string, unknown> | null;
-  notes: string | null;
+  notes: Record<string, unknown> | null;
   sort_order: number;
 }
 

@@ -18,7 +18,7 @@ interface SlideRow {
   id: string;
   title: string;
   content: Record<string, unknown> | null;
-  notes: string | null;
+  notes: Record<string, unknown> | null;
   sort_order: number;
 }
 
@@ -71,8 +71,8 @@ export default function AdminSlidesPage() {
   const [slideForm, setSlideForm] = useState<{
     title: string;
     content: Record<string, unknown> | null;
-    notes: string;
-  }>({ title: '', content: null, notes: '' });
+    notes: Record<string, unknown> | null;
+  }>({ title: '', content: null, notes: null });
   const [savingSlide, setSavingSlide] = useState(false);
   const [slideError, setSlideError] = useState<string | null>(null);
   const [moving, setMoving] = useState(false);
@@ -148,7 +148,7 @@ export default function AdminSlidesPage() {
 
   function startSlideAdd() {
     setEditingSlideId('new');
-    setSlideForm({ title: '', content: null, notes: '' });
+    setSlideForm({ title: '', content: null, notes: null });
     setSlideError(null);
   }
 
@@ -159,7 +159,7 @@ export default function AdminSlidesPage() {
       return;
     }
     setEditingSlideId(s.id);
-    setSlideForm({ title: s.title, content: s.content, notes: s.notes || '' });
+    setSlideForm({ title: s.title, content: s.content, notes: s.notes || null });
     setSlideError(null);
   }
 
@@ -493,12 +493,10 @@ export default function AdminSlidesPage() {
                             </div>
                             <div>
                               <label style={labelStyle}>Speaker notes</label>
-                              <textarea
-                                style={{ ...inputStyle, minHeight: '64px', resize: 'vertical' }}
-                                value={slideForm.notes}
-                                onChange={(e) =>
-                                  setSlideForm({ ...slideForm, notes: e.target.value })
-                                }
+                              <TiptapEditor
+                                key={`notes-${s.id}`}
+                                content={slideForm.notes}
+                                onChange={(json) => setSlideForm((f) => ({ ...f, notes: json }))}
                               />
                             </div>
                             {slideError && (
@@ -582,10 +580,10 @@ export default function AdminSlidesPage() {
                       </div>
                       <div>
                         <label style={labelStyle}>Speaker notes</label>
-                        <textarea
-                          style={{ ...inputStyle, minHeight: '64px', resize: 'vertical' }}
-                          value={slideForm.notes}
-                          onChange={(e) => setSlideForm({ ...slideForm, notes: e.target.value })}
+                        <TiptapEditor
+                          key="notes-new"
+                          content={slideForm.notes}
+                          onChange={(json) => setSlideForm((f) => ({ ...f, notes: json }))}
                         />
                       </div>
                       {slideError && (

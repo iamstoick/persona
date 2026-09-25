@@ -44,8 +44,9 @@ async function deckOr404(deckId) {
   return rows[0] || null;
 }
 
-function validContent(content) {
-  return content === null || content === undefined || typeof content === 'object';
+// Slide body and speaker notes share the Tiptap JSON doc shape (or null when empty).
+function validDoc(doc) {
+  return doc === null || doc === undefined || typeof doc === 'object';
 }
 
 router.get('/:id/slides', editorOrAdmin, async (req, res) => {
@@ -63,7 +64,8 @@ router.post('/:id/slides', editorOrAdmin, async (req, res) => {
   if (!deck) return res.status(404).json({ error: 'Deck not found' });
   const { title, content, notes, sort_order } = req.body;
   if (!title) return res.status(400).json({ error: 'title is required' });
-  if (!validContent(content)) return res.status(400).json({ error: 'content must be an object' });
+  if (!validDoc(content)) return res.status(400).json({ error: 'content must be an object' });
+  if (!validDoc(notes)) return res.status(400).json({ error: 'notes must be an object' });
 
   const order =
     Number.isInteger(sort_order) && sort_order >= 0
@@ -73,7 +75,7 @@ router.post('/:id/slides', editorOrAdmin, async (req, res) => {
   const { rows } = await pool.query(
     `INSERT INTO slides (deck_id, title, content, notes, sort_order)
      VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-    [deck.id, title, content ? JSON.stringify(content) : null, notes || null, order]
+    [deck.id, title, content ? JSON.stringify(content) : null, notes ? JSON.stringify(notes) : null, order]
   );
 
   await cacheDelPattern('cache:slides:*');
@@ -125,7 +127,8 @@ router.put('/:id/slides/:slideId', editorOrAdmin, async (req, res) => {
   if (!deck) return res.status(404).json({ error: 'Deck not found' });
   const { title, content, notes, sort_order } = req.body;
   if (!title) return res.status(400).json({ error: 'title is required' });
-  if (!validContent(content)) return res.status(400).json({ error: 'content must be an object' });
+  if (!validDoc(content)) return res.status(400).json({ error: 'content must be an object' });
+  if (!validDoc(notes)) return res.status(400).json({ error: 'notes must be an object' });
 
   const { rows } = await pool.query(
     `UPDATE slides SET title = $1, content = $2, notes = $3, sort_order = COALESCE($4, sort_order)
@@ -133,7 +136,7 @@ router.put('/:id/slides/:slideId', editorOrAdmin, async (req, res) => {
     [
       title,
       content ? JSON.stringify(content) : null,
-      notes || null,
+      notes ? JSON.stringify(notes) : null,
       Number.isInteger(sort_order) && sort_order >= 0 ? sort_order : null,
       req.params.slideId,
       deck.id,

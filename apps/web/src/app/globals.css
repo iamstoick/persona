@@ -135,6 +135,18 @@ body {
   margin: 0;
 }
 
+/* Speaker notes box: restore native list markers. The global .prose list rules
+   use a flex column layout, which suppresses ::marker bullets — notes need real
+   bullets, so lists here fall back to block layout with stacked spacing. */
+.notes-body ul,
+.notes-body ol {
+  display: block;
+}
+
+.notes-body li + li {
+  margin-top: 0.4rem;
+}
+
 .prose blockquote {
   border-left: 3px solid var(--color-accent);
   padding-left: 1.25rem;

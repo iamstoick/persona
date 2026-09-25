@@ -112,6 +112,8 @@ export function SlidePresenter({ deckTitle, slides }: Props) {
   }
 
   const html = renderTiptapContent(slide.content);
+  const notesHtml =
+    slide.notes && typeof slide.notes === 'object' ? renderTiptapContent(slide.notes) : '';
   const progressPct = total > 0 ? Math.round(((index + 1) / total) * 100) : 0;
 
   return (
@@ -251,7 +253,7 @@ export function SlidePresenter({ deckTitle, slides }: Props) {
             dangerouslySetInnerHTML={{ __html: html }}
             style={{ color: '#E8E8E8' }}
           />
-          {showNotes && slide.notes && (
+          {showNotes && notesHtml && (
             <div
               style={{
                 marginTop: '2.5rem',
@@ -272,9 +274,11 @@ export function SlidePresenter({ deckTitle, slides }: Props) {
               >
                 Speaker notes
               </div>
-              <p style={{ color: '#888888', fontSize: '0.95rem', lineHeight: 1.7, margin: 0 }}>
-                {slide.notes}
-              </p>
+              <div
+                className="prose notes-body"
+                dangerouslySetInnerHTML={{ __html: notesHtml }}
+                style={{ color: '#888888', fontSize: '0.95rem' }}
+              />
             </div>
           )}
         </div>
