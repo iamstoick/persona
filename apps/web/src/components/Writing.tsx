@@ -36,7 +36,7 @@ export function Writing({ featured, posts }: Props) {
           letterSpacing: '-0.03em',
         }}
       >
-        Writing
+        Writings
       </h2>
 
       {featured && (

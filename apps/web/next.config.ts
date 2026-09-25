@@ -55,6 +55,16 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        // Legacy post URL (pre-/blog prefix) — keep old links and bookmarks working.
+        source: '/understanding-pointers-go-practical-guide',
+        destination: '/blog/understanding-pointers-go-practical-guide',
+        permanent: true,
+      },
+    ];
+  },
   async rewrites() {
     // This proxy runs in the Next.js server process, so it needs the API's address as seen
     // from that server (API_INTERNAL_URL inside Docker), not the browser-facing public URL.
