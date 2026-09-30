@@ -6,7 +6,7 @@ name: gv-dev
 
 services:
   postgres:
-    image: postgres:18.3
+    image: postgres:18
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-gv_db}
       POSTGRES_USER: ${POSTGRES_USER:-gv_user}
