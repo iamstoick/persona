@@ -2,7 +2,7 @@ name: gv-prod
 
 services:
   postgres:
-    image: postgres:18.3
+    image: postgres:18
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
