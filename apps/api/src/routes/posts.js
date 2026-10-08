@@ -99,4 +99,38 @@ router.get('/:slug', async (req, res) => {
   res.json(result);
 });
 
+// Related posts: most shared tags first, then most recent. Zero-shared-tag
+// posts still qualify, so this doubles as the recent-posts fallback — one
+// query covers both cases.
+export const RELATED_POSTS_SQL = `
+  SELECT p.id, p.slug, p.title, p.excerpt, p.featured_image_url, p.published_at,
+         u.name AS author_name,
+         array_agg(DISTINCT c.slug) FILTER (WHERE c.slug IS NOT NULL) AS categories,
+         array_agg(DISTINCT t.name) FILTER (WHERE t.name IS NOT NULL) AS tags,
+         COUNT(DISTINCT pt2.tag_id)::int AS shared_tags
+  FROM posts p
+  LEFT JOIN users u ON u.id = p.author_id
+  LEFT JOIN post_categories pc ON pc.post_id = p.id
+  LEFT JOIN categories c ON c.id = pc.category_id
+  LEFT JOIN post_tags pt ON pt.post_id = p.id
+  LEFT JOIN tags t ON t.id = pt.tag_id
+  LEFT JOIN post_tags pt2 ON pt2.tag_id = pt.tag_id AND pt2.post_id = (SELECT id FROM posts WHERE slug = $1)
+  WHERE p.type = 'post' AND p.status = 'published' AND p.slug <> $1
+  GROUP BY p.id, u.name
+  ORDER BY shared_tags DESC, p.published_at DESC
+  LIMIT $2`;
+
+router.get('/:slug/related', async (req, res) => {
+  const limit = Math.min(5, Math.max(1, parseInt(req.query.limit) || 2));
+  const cacheKey = `cache:posts:related:${req.params.slug}:${limit}`;
+
+  const cached = await cacheGet(cacheKey);
+  if (cached) return res.json(cached);
+
+  const { rows } = await pool.query(RELATED_POSTS_SQL, [req.params.slug, limit]);
+
+  await cacheSet(cacheKey, rows, TTL.POSTS);
+  res.json(rows);
+});
+
 export default router;

@@ -18,6 +18,18 @@ function formatDate(iso: string | null) {
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://geraldvillorente.com';
 
+interface RelatedPost {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  featured_image_url: string | null;
+  published_at: string | null;
+  author_name: string | null;
+  categories: string[] | null;
+  tags: string[] | null;
+}
+
 // Without this, Next.js renders a dynamic-segment page once (no generateStaticParams
 // here) and then caches that HTML indefinitely — an admin edit to the post's content
 // in the DB would never show up on this page again without a full redeploy. Same class
@@ -65,6 +77,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     post = await apiFetch<Post>(`/api/posts/${slug}`);
   } catch {
     notFound();
+  }
+
+  let related: RelatedPost[] = [];
+  try {
+    related = await apiFetch<RelatedPost[]>(`/api/posts/${slug}/related`);
+  } catch {
+    related = [];
   }
 
   const html = renderTiptapContent(post.content);
@@ -190,6 +209,107 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             }}
           />
         </CodeTabsEnhancer>
+
+        {related.length > 0 && (
+          <div style={{ marginTop: '4rem', paddingTop: '3rem', borderTop: '1px solid #1F1F1F' }}>
+            <h2
+              style={{
+                fontFamily: 'var(--font-space-grotesk)',
+                fontWeight: 700,
+                color: '#888888',
+                marginBottom: '1.5rem',
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                fontSize: '0.8rem',
+              }}
+            >
+              Related reading
+            </h2>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                gap: '1.5rem',
+              }}
+            >
+              {related.map((relatedPost) => (
+                <a
+                  key={relatedPost.id}
+                  href={`/blog/${relatedPost.slug}`}
+                  style={{
+                    display: 'block',
+                    backgroundColor: '#141414',
+                    border: '1px solid #1F1F1F',
+                    textDecoration: 'none',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {relatedPost.featured_image_url && (
+                    <div style={{ position: 'relative', height: '160px' }}>
+                      <NextImage
+                        src={relatedPost.featured_image_url}
+                        alt={relatedPost.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        style={{ objectFit: 'cover' }}
+                      />
+                    </div>
+                  )}
+                  <div style={{ padding: '1.25rem' }}>
+                    {relatedPost.categories && relatedPost.categories.length > 0 && (
+                      <span
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '0.65rem',
+                          color: '#63E6A0',
+                          letterSpacing: '0.1em',
+                          textTransform: 'uppercase',
+                          display: 'block',
+                          marginBottom: '0.5rem',
+                        }}
+                      >
+                        {relatedPost.categories[0]}
+                      </span>
+                    )}
+                    <h3
+                      style={{
+                        fontFamily: 'var(--font-space-grotesk)',
+                        fontWeight: 700,
+                        fontSize: '1.05rem',
+                        color: '#E8E8E8',
+                        marginBottom: '0.5rem',
+                        letterSpacing: '-0.02em',
+                      }}
+                    >
+                      {relatedPost.title}
+                    </h3>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: '#888888' }}>
+                      {formatDate(relatedPost.published_at)}
+                    </span>
+                    {relatedPost.tags && relatedPost.tags.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.75rem' }}>
+                        {relatedPost.tags.slice(0, 4).map((tag) => (
+                          <span
+                            key={tag}
+                            style={{
+                              fontFamily: 'var(--font-mono)',
+                              fontSize: '0.65rem',
+                              padding: '0.15rem 0.5rem',
+                              border: '1px solid #1F1F1F',
+                              color: '#888888',
+                            }}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div style={{ marginTop: '4rem', paddingTop: '3rem', borderTop: '1px solid #1F1F1F' }}>
           <h2
