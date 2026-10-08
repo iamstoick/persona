@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { pool } from '../db/pool.js';
 import { requireRole } from '../middleware/requireAuth.js';
+import { parsePagination } from '../lib/pagination.js';
 import { cacheDelPattern } from '../cache/redis.js';
 import { purgeUrls } from '../cache/cloudflare.js';
 
@@ -55,8 +56,8 @@ async function getTerms(client, postId) {
 }
 
 router.get('/', editorOrAdmin, async (req, res) => {
-  const { type, status, page = '1', limit = '20', q } = req.query;
-  const offset = (parseInt(page) - 1) * parseInt(limit);
+  const { type, status, page: pageParam = '1', limit: limitParam = '20', q } = req.query;
+  const { limit, offset } = parsePagination({ page: pageParam, limit: limitParam }, { defaultLimit: 20 });
 
   const conditions = [];
   const params = [];
@@ -67,7 +68,7 @@ router.get('/', editorOrAdmin, async (req, res) => {
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
-  params.push(parseInt(limit), offset);
+  params.push(limit, offset);
   const { rows } = await pool.query(
     `SELECT p.*, u.name AS author_name
      FROM posts p

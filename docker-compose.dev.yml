@@ -18,7 +18,9 @@ services:
     networks:
       - gv_dev
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gv_user}"]
+      # -d matters: without it pg_isready defaults the dbname to the username,
+      # which doesn't exist — every check then logs a FATAL on the server.
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gv_user} -d ${POSTGRES_DB:-gv_db}"]
       interval: 5s
       timeout: 5s
       retries: 10

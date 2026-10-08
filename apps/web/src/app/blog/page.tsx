@@ -28,7 +28,7 @@ async function getBlogData(page = 1) {
 
 export default async function BlogPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
   const { page: pageParam } = await searchParams;
-  const page = parseInt(pageParam || '1');
+  const page = Math.max(1, parseInt(pageParam || '1') || 1);
   const { featured, all } = await getBlogData(page);
 
   const rest = all.data.filter((p) => p.id !== featured?.id);

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { pool } from '../db/pool.js';
 import { cacheGet, cacheSet, TTL } from '../cache/redis.js';
+import { parsePagination } from '../lib/pagination.js';
 
 const router = Router();
 
@@ -11,8 +12,8 @@ function readTime(content) {
 }
 
 router.get('/', async (req, res) => {
-  const { type = 'post', status = 'published', page = '1', limit = '10' } = req.query;
-  const offset = (parseInt(page) - 1) * parseInt(limit);
+  const { type = 'post', status = 'published', page: pageParam = '1', limit: limitParam = '10' } = req.query;
+  const { page, limit, offset } = parsePagination({ page: pageParam, limit: limitParam });
   const cacheKey = `cache:posts:list:${type}:${status}:${page}:${limit}`;
 
   const cached = await cacheGet(cacheKey);
@@ -29,7 +30,7 @@ router.get('/', async (req, res) => {
      GROUP BY p.id, u.name, u.avatar_url
      ORDER BY p.published_at DESC
      LIMIT $3 OFFSET $4`,
-    [type, status, parseInt(limit), offset]
+    [type, status, limit, offset]
   );
 
   const { rows: countRows } = await pool.query(
@@ -40,8 +41,8 @@ router.get('/', async (req, res) => {
   const result = {
     data: rows.map((p) => ({ ...p, read_time: readTime(p.content) })),
     total: parseInt(countRows[0].count),
-    page: parseInt(page),
-    limit: parseInt(limit),
+    page,
+    limit,
   };
 
   await cacheSet(cacheKey, result, TTL.POSTS);
