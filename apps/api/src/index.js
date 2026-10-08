@@ -38,7 +38,12 @@ if (MISSING_VARS.length > 0) {
 
 const app = express();
 
-app.set('trust proxy', 1);
+// Two trusted hops in production: Cloudflare edge -> nginx -> api. This makes
+// req.ip (morgan logs, contact rate limiter) the real client instead of a
+// Cloudflare edge IP. Assumes public traffic arrives via Cloudflare; direct-
+// to-origin requests carry no trustworthy chain, so don't treat req.ip as an
+// abuse-proof identity.
+app.set('trust proxy', 2);
 app.use(helmet());
 app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:8899', credentials: true }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
@@ -70,6 +75,9 @@ app.use('/api/admin/projects', adminProjectsRoutes);
 app.use('/api/admin/services', adminServicesRoutes);
 app.use('/api/admin/courses', adminCoursesRoutes);
 app.use('/api/admin/slides', adminSlidesRoutes);
+
+// Unknown /api/* routes get JSON, not Express's default HTML error page.
+app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
 
 app.use((err, _req, res, _next) => {
   console.error(err);
