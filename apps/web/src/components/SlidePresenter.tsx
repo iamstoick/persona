@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { renderTiptapContent } from '@/lib/renderTiptap';
+import { CodeTabsEnhancer } from '@/components/CodeTabsEnhancer';
 import type { Slide } from '@/lib/api';
 
 interface Props {
@@ -248,11 +249,13 @@ export function SlidePresenter({ deckTitle, slides }: Props) {
           >
             {slide.title}
           </h2>
-          <div
-            className="prose slide-body"
-            dangerouslySetInnerHTML={{ __html: html }}
-            style={{ color: '#E8E8E8' }}
-          />
+          <CodeTabsEnhancer>
+            <div
+              className="prose slide-body"
+              dangerouslySetInnerHTML={{ __html: html }}
+              style={{ color: '#E8E8E8' }}
+            />
+          </CodeTabsEnhancer>
           {showNotes && notesHtml && (
             <div
               style={{
@@ -274,11 +277,13 @@ export function SlidePresenter({ deckTitle, slides }: Props) {
               >
                 Speaker notes
               </div>
-              <div
-                className="prose notes-body"
-                dangerouslySetInnerHTML={{ __html: notesHtml }}
-                style={{ color: '#888888', fontSize: '0.95rem' }}
-              />
+              <CodeTabsEnhancer>
+                <div
+                  className="prose notes-body"
+                  dangerouslySetInnerHTML={{ __html: notesHtml }}
+                  style={{ color: '#888888', fontSize: '0.95rem' }}
+                />
+              </CodeTabsEnhancer>
             </div>
           )}
         </div>

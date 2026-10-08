@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { isLoggedIn } from '@/lib/auth/client';
 import { renderTiptapContent } from '@/lib/renderTiptap';
+import { CodeTabsEnhancer } from '@/components/CodeTabsEnhancer';
 import type { CourseDetail, CourseLessonFull } from '@/lib/api';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
@@ -214,7 +215,9 @@ function CourseLessonInner() {
           {lesson.title}
         </h1>
 
-        <div className="prose" dangerouslySetInnerHTML={{ __html: html }} style={{ color: '#E8E8E8', lineHeight: 1.8, fontSize: '1.05rem' }} />
+        <CodeTabsEnhancer>
+          <div className="prose" dangerouslySetInnerHTML={{ __html: html }} style={{ color: '#E8E8E8', lineHeight: 1.8, fontSize: '1.05rem' }} />
+        </CodeTabsEnhancer>
 
         <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid #1F1F1F' }}>
           <button

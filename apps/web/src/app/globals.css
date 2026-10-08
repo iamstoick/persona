@@ -207,6 +207,125 @@ body {
   color: var(--color-accent);
 }
 
+.prose details {
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+  background-color: var(--color-surface);
+}
+
+.prose summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+.prose summary::marker {
+  color: var(--color-accent);
+}
+
+.prose details[open] summary {
+  margin-bottom: 1rem;
+}
+
+.prose details > * + * {
+  margin-top: 1rem;
+}
+
+/* Tabbed code samples. Panels render stacked server-side with only the first
+   visible; CodeTabsEnhancer builds the tab bar and switching client-side. */
+.prose .code-tabs {
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: var(--color-surface);
+}
+
+.prose .code-tabs-list {
+  display: flex;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--color-border);
+  background-color: #101010;
+}
+
+.prose .code-tab-btn {
+  flex: none;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0.55rem 0.95rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.prose .code-tab-btn:hover {
+  color: var(--color-text);
+}
+
+.prose .code-tab-btn:focus-visible {
+  outline: 1px solid var(--color-accent);
+  outline-offset: -1px;
+}
+
+.prose .code-tab-btn[aria-selected='true'] {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
+
+.prose .code-tabs-panel {
+  display: none;
+}
+
+.prose .code-tabs:not(.is-ready) .code-tabs-panel:first-child {
+  display: block;
+}
+
+.prose .code-tabs.is-ready .code-tabs-panel.is-active {
+  display: block;
+}
+
+.prose .code-tabs-panel pre {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+}
+
+/* Admin editor: outline each tab group and label panels with their language. */
+.ProseMirror [data-code-tabs] {
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.ProseMirror [data-code-tab] {
+  border-top: 1px dashed var(--color-border);
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.ProseMirror [data-code-tab]:first-child {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.ProseMirror [data-code-tab]::before {
+  content: attr(data-label);
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-accent);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.1rem 0.45rem;
+  margin-bottom: 0.4rem;
+}
+
 .ambient-glow {
   position: absolute;
   width: 52vw;

@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 1010" width="760" height="1010" role="img" aria-label="Diagram: how a web app runs, from browser through firewall, CDN, servers, cache, and database">
+  <rect width="760" height="1010" fill="#0D0D0D"/>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#5A5A5A"/>
+    </marker>
+  </defs>
+  <text x="380" y="48" font-size="30" fill="#E8E8E8" font-weight="800" text-anchor="middle" font-family="Inter, -apple-system, 'Helvetica Neue', Arial, sans-serif">How a web app runs</text>
+  <text x="380" y="78" font-size="16" fill="#9A9A9A" font-weight="500" text-anchor="middle" font-family="Inter, -apple-system, 'Helvetica Neue', Arial, sans-serif">follow one click to the server and back</text>
+
+  <g font-family="Inter, -apple-system, 'Helvetica Neue', Arial, sans-serif">
+    <circle cx="60" cy="148" r="20" fill="#141414" stroke="#63E6A0" stroke-width="2"/>
+    <text x="60" y="156" font-size="20" fill="#63E6A0" font-weight="800" text-anchor="middle">1</text>
+    <rect x="94" y="110" width="420" height="76" rx="10" fill="#141414" stroke="#2E2E2E" stroke-width="1.5"/>
+    <text x="119" y="142" font-size="21" fill="#E8E8E8" font-weight="700">Your browser</text>
+    <text x="119" y="168" font-size="15" fill="#9A9A9A" font-weight="500">Chrome or Safari — where you click</text>
+
+    <line x1="304" y1="192" x2="304" y2="214" stroke="#5A5A5A" stroke-width="3" marker-end="url(#arrow)"/>
+    <text x="322" y="210" font-size="13" fill="#8A8A8A" font-weight="500">HTTPS · port 443</text>
+
+    <circle cx="60" cy="260" r="20" fill="#141414" stroke="#63E6A0" stroke-width="2"/>
+    <text x="60" y="268" font-size="20" fill="#63E6A0" font-weight="800" text-anchor="middle">2</text>
+    <rect x="94" y="222" width="420" height="76" rx="10" fill="#141414" stroke="#2E2E2E" stroke-width="1.5"/>
+    <text x="119" y="254" font-size="21" fill="#E8E8E8" font-weight="700">Firewall</text>
+    <text x="119" y="280" font-size="15" fill="#9A9A9A" font-weight="500">the bouncer — blocks bad visitors</text>
+
+    <line x1="304" y1="304" x2="304" y2="326" stroke="#5A5A5A" stroke-width="3" marker-end="url(#arrow)"/>
+    <text x="322" y="322" font-size="13" fill="#8A8A8A" font-weight="500">checked and allowed</text>
+
+    <circle cx="60" cy="372" r="20" fill="#141414" stroke="#63E6A0" stroke-width="2"/>
+    <text x="60" y="380" font-size="20" fill="#63E6A0" font-weight="800" text-anchor="middle">3</text>
+    <rect x="94" y="334" width="420" height="76" rx="10" fill="#141414" stroke="#2E2E2E" stroke-width="1.5"/>
+    <text x="119" y="366" font-size="21" fill="#E8E8E8" font-weight="700">CDN</text>
+    <text x="119" y="392" font-size="15" fill="#9A9A9A" font-weight="500">copies of pictures and files stored near you</text>
+
+    <line x1="304" y1="416" x2="304" y2="438" stroke="#5A5A5A" stroke-width="3" marker-end="url(#arrow)"/>
+    <text x="322" y="434" font-size="13" fill="#8A8A8A" font-weight="500">cache miss — keep going</text>
+
+    <circle cx="60" cy="484" r="20" fill="#141414" stroke="#63E6A0" stroke-width="2"/>
+    <text x="60" y="492" font-size="20" fill="#63E6A0" font-weight="800" text-anchor="middle">4</text>
+    <rect x="94" y="446" width="420" height="76" rx="10" fill="#141414" stroke="#2E2E2E" stroke-width="1.5"/>
+    <text x="119" y="478" font-size="21" fill="#E8E8E8" font-weight="700">Web server · port 443</text>
+    <text x="119" y="504" font-size="15" fill="#9A9A9A" font-weight="500">the front door — speaks HTTPS</text>
+
+    <line x1="304" y1="528" x2="304" y2="550" stroke="#5A5A5A" stroke-width="3" marker-end="url(#arrow)"/>
+    <text x="322" y="546" font-size="13" fill="#8A8A8A" font-weight="500">forwards the order</text>
+
+    <circle cx="60" cy="596" r="20" fill="#141414" stroke="#63E6A0" stroke-width="2"/>
+    <text x="60" y="604" font-size="20" fill="#63E6A0" font-weight="800" text-anchor="middle">5</text>
+    <rect x="94" y="558" width="420" height="76" rx="10" fill="#141414" stroke="#2E2E2E" stroke-width="1.5"/>
+    <text x="119" y="590" font-size="21" fill="#E8E8E8" font-weight="700">API server</text>
+    <text x="119" y="616" font-size="15" fill="#9A9A9A" font-weight="500">the waiter — takes your order to the kitchen</text>
+
+    <line x1="304" y1="640" x2="304" y2="662" stroke="#5A5A5A" stroke-width="3" marker-end="url(#arrow)"/>
+    <text x="322" y="658" font-size="13" fill="#8A8A8A" font-weight="500">remember this one?</text>
+
+    <circle cx="60" cy="708" r="20" fill="#141414" stroke="#63E6A0" stroke-width="2"/>
+    <text x="60" y="716" font-size="20" fill="#63E6A0" font-weight="800" text-anchor="middle">6</text>
+    <rect x="94" y="670" width="420" height="76" rx="10" fill="#141414" stroke="#2E2E2E" stroke-width="1.5"/>
+    <text x="119" y="702" font-size="21" fill="#E8E8E8" font-weight="700">Cache · Redis</text>
+    <text x="119" y="728" font-size="15" fill="#9A9A9A" font-weight="500">sticky notes — answers it remembers</text>
+
+    <line x1="304" y1="752" x2="304" y2="774" stroke="#5A5A5A" stroke-width="3" marker-end="url(#arrow)"/>
+    <text x="322" y="770" font-size="13" fill="#8A8A8A" font-weight="500">not on a sticky note — look it up</text>
+
+    <circle cx="60" cy="820" r="20" fill="#141414" stroke="#63E6A0" stroke-width="2"/>
+    <text x="60" y="828" font-size="20" fill="#63E6A0" font-weight="800" text-anchor="middle">7</text>
+    <rect x="94" y="782" width="420" height="76" rx="10" fill="#141414" stroke="#63E6A0" stroke-width="2"/>
+    <text x="119" y="814" font-size="21" fill="#E8E8E8" font-weight="700">Database</text>
+    <text x="119" y="840" font-size="15" fill="#9A9A9A" font-weight="500">filing cabinets — all the data lives here</text>
+
+    <text x="380" y="902" font-size="17" fill="#63E6A0" font-weight="700" text-anchor="middle">↑ answers travel back up the same chain</text>
+    <text x="380" y="934" font-size="14" fill="#8A8A8A" font-weight="500" text-anchor="middle">Browsers use port 443 + HTTPS (locked). Port 80 + HTTP is the old unlocked way.</text>
+    <text x="380" y="960" font-size="14" fill="#8A8A8A" font-weight="500" text-anchor="middle">API = the menu of orders the waiter accepts. Cache = skipped work. CDN = nearby copies.</text>
+  </g>
+</svg>

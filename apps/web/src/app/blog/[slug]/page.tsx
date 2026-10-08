@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import NextImage from 'next/image';
 import { apiFetch, Post } from '@/lib/api';
 import { ReadingProgress } from '@/components/ReadingProgress';
+import { CodeTabsEnhancer } from '@/components/CodeTabsEnhancer';
 import { GiscusEmbed } from '@/components/GiscusEmbed';
 import { ShareButtons } from '@/components/ShareButtons';
 import { renderTiptapContent } from '@/lib/renderTiptap';
@@ -178,15 +179,17 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           </div>
         )}
 
-        <div
-          className="prose"
-          dangerouslySetInnerHTML={{ __html: html }}
-          style={{
-            color: '#E8E8E8',
-            lineHeight: 1.8,
-            fontSize: '1.05rem',
-          }}
-        />
+        <CodeTabsEnhancer>
+          <div
+            className="prose"
+            dangerouslySetInnerHTML={{ __html: html }}
+            style={{
+              color: '#E8E8E8',
+              lineHeight: 1.8,
+              fontSize: '1.05rem',
+            }}
+          />
+        </CodeTabsEnhancer>
 
         <div style={{ marginTop: '4rem', paddingTop: '3rem', borderTop: '1px solid #1F1F1F' }}>
           <h2

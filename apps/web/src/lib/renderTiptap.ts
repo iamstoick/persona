@@ -3,6 +3,8 @@ import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import DOMPurify from 'isomorphic-dompurify';
+import { Details, DetailsSummary } from './tiptapDetails';
+import { CodeTabs, CodeTab } from './tiptapCodeTabs';
 
 // Sanitized as defense-in-depth before being injected via dangerouslySetInnerHTML: content
 // is authored by trusted editor/admin roles today, but if that trust boundary is ever
@@ -11,7 +13,15 @@ import DOMPurify from 'isomorphic-dompurify';
 export function renderTiptapContent(content: Record<string, unknown> | null): string {
   if (!content) return '';
   try {
-    const html = generateHTML(content as Parameters<typeof generateHTML>[0], [StarterKit, Image, Link]);
+    const html = generateHTML(content as Parameters<typeof generateHTML>[0], [
+      StarterKit,
+      Image,
+      Link,
+      Details,
+      DetailsSummary,
+      CodeTabs,
+      CodeTab,
+    ]);
     return DOMPurify.sanitize(html);
   } catch {
     return '';

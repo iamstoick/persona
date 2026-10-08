@@ -6,6 +6,8 @@ import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
+import { Details, DetailsSummary } from '@/lib/tiptapDetails';
+import { CodeTabs, CodeTab } from '@/lib/tiptapCodeTabs';
 import { authFetch } from '@/lib/auth/client';
 
 interface Props {
@@ -22,6 +24,8 @@ const TOOLBAR_BUTTONS = [
   { label: '1.', command: (e: ReturnType<typeof useEditor>) => e?.chain().focus().toggleOrderedList().run(), title: 'Ordered list' },
   { label: '❝', command: (e: ReturnType<typeof useEditor>) => e?.chain().focus().toggleBlockquote().run(), title: 'Quote' },
   { label: '<>', command: (e: ReturnType<typeof useEditor>) => e?.chain().focus().toggleCode().run(), title: 'Code' },
+  { label: '▸≡', command: (e: ReturnType<typeof useEditor>) => e?.chain().focus().setDetails().run(), title: 'Collapsible section' },
+  { label: 'Tabs', command: (e: ReturnType<typeof useEditor>) => e?.chain().focus().setCodeTabs().run(), title: 'Tabbed code block' },
 ];
 
 export function TiptapEditor({ content, onChange }: Props) {
@@ -35,6 +39,10 @@ export function TiptapEditor({ content, onChange }: Props) {
       Image,
       Link.configure({ openOnClick: false }),
       Placeholder.configure({ placeholder: 'Start writing…' }),
+      Details,
+      DetailsSummary,
+      CodeTabs,
+      CodeTab,
     ],
     content: content || undefined,
     onUpdate: ({ editor }) => {
