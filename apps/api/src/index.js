@@ -41,7 +41,7 @@ const app = express();
 app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:8899', credentials: true }));
-app.use(morgan('dev'));
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -73,7 +73,11 @@ app.use('/api/admin/slides', adminSlidesRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);
-  res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
+  // Production clients get a generic message (no PG internals leak); the full
+  // error above stays in the server logs where it belongs.
+  const message =
+    process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message || 'Internal server error';
+  res.status(err.status || 500).json({ error: message });
 });
 
 const PORT = process.env.PORT || 4000;

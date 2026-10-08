@@ -24,6 +24,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   redis:
     image: redis:8.8.0-alpine
@@ -38,6 +43,11 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   api:
     build:
@@ -49,6 +59,11 @@ services:
       POSTGRES_HOST: postgres
       REDIS_URL: redis://redis:6379
       FRONTEND_URL: http://localhost:8899
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
     ports:
       - "127.0.0.1:4000:4000"
     volumes:
@@ -73,6 +88,11 @@ services:
       NEXT_PUBLIC_API_URL: http://localhost:4000
       API_INTERNAL_URL: http://api:4000
       NEXT_PUBLIC_SITE_URL: http://localhost:8899
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
     ports:
       - "127.0.0.1:8899:8899"
     volumes:
