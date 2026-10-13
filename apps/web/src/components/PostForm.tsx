@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { TiptapEditor } from './TiptapEditor';
+import { PostPreview } from './PostPreview';
 import { authFetch } from '@/lib/auth/client';
 import { useRouter } from 'next/navigation';
 
@@ -19,6 +20,8 @@ interface PostData {
   meta_description?: string;
   categories?: string[];
   tags?: string[];
+  author_name?: string | null;
+  published_at?: string | null;
 }
 
 interface Props {
@@ -29,6 +32,8 @@ export function PostForm({ initial = {} }: Props) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const closePreview = useCallback(() => setShowPreview(false), []);
   const [form, setForm] = useState({
     type: initial.type || 'post',
     status: initial.status || 'draft',
@@ -172,6 +177,13 @@ export function PostForm({ initial = {} }: Props) {
             {saving ? 'Saving…' : 'Publish'}
           </button>
           <button
+            onClick={() => setShowPreview(true)}
+            disabled={saving}
+            style={{ padding: '0.6rem', backgroundColor: 'transparent', color: '#E8E8E8', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', border: '1px solid #1F1F1F', cursor: 'pointer' }}
+          >
+            Preview
+          </button>
+          <button
             onClick={() => save('draft')}
             disabled={saving}
             style={{ padding: '0.6rem', backgroundColor: 'transparent', color: '#888888', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', border: '1px solid #1F1F1F', cursor: 'pointer' }}
@@ -180,6 +192,22 @@ export function PostForm({ initial = {} }: Props) {
           </button>
         </div>
       </div>
+      {showPreview && (
+        <PostPreview
+          draft={{
+            title: form.title,
+            excerpt: form.excerpt,
+            content: form.content,
+            featured_image_url: form.featured_image_url,
+            slug: form.slug,
+            categories: form.categories,
+            tags: form.tags,
+          }}
+          authorName={initial.author_name ?? null}
+          publishedAt={initial.published_at ?? null}
+          onClose={closePreview}
+        />
+      )}
     </div>
   );
 }

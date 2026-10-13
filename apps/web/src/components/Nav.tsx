@@ -30,8 +30,15 @@ const ctaStyle: React.CSSProperties = {
   textDecoration: 'none',
 };
 
-export function Nav() {
-  const pathname = usePathname();
+interface Props {
+  // Lets the admin draft preview render the public nav as it would appear on
+  // a given path. Omit it and the nav behaves exactly as before.
+  previewAsPath?: string;
+}
+
+export function Nav({ previewAsPath }: Props) {
+  const actualPathname = usePathname();
+  const pathname = previewAsPath ?? actualPathname;
   const [menuOpen, setMenuOpen] = useState(false);
   if (pathname?.startsWith('/admin')) return null;
 

@@ -2,19 +2,29 @@
 
 import { useEffect, useState } from 'react';
 
-export function ReadingProgress() {
+interface Props {
+  // Optional scroll container to track instead of the window. The admin draft
+  // preview scrolls inside its own overlay; omitting this keeps the default
+  // window behavior used by public pages.
+  scrollRef?: React.RefObject<HTMLElement | null>;
+}
+
+export function ReadingProgress({ scrollRef }: Props) {
   const [width, setWidth] = useState(0);
 
   useEffect(() => {
+    const container = scrollRef?.current;
     function update() {
-      const el = document.documentElement;
+      const el = container || document.documentElement;
       const scrolled = el.scrollTop;
       const total = el.scrollHeight - el.clientHeight;
       setWidth(total > 0 ? (scrolled / total) * 100 : 0);
     }
-    window.addEventListener('scroll', update, { passive: true });
-    return () => window.removeEventListener('scroll', update);
-  }, []);
+    const target = container || window;
+    target.addEventListener('scroll', update, { passive: true });
+    update();
+    return () => target.removeEventListener('scroll', update);
+  }, [scrollRef]);
 
   return (
     <div
