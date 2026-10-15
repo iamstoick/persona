@@ -15,3 +15,11 @@ redisdata_prod/
 apps/api/uploads/
 certbot/
 *.tsbuildinfo
+
+# Content materials never enter git (hard rule): drafts are generated locally
+# and imported straight to production as seed SQL. (Already-tracked files in
+# content/ are grandfathered; these patterns cover new content only.)
+content/*.md
+content/*.sql
+content/*.svg
+content/draft-assets/
