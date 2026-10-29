@@ -20,9 +20,8 @@ export default function CoursesPage() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
           {courses.map((course) => (
-            <a
+            <div
               key={course.id}
-              href={`/courses/${course.slug}`}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -30,7 +29,6 @@ export default function CoursesPage() {
                 padding: '1.75rem',
                 backgroundColor: '#141414',
                 border: '1px solid #1F1F1F',
-                textDecoration: 'none',
               }}
             >
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: '#63E6A0' }}>
@@ -45,17 +43,22 @@ export default function CoursesPage() {
                   margin: 0,
                 }}
               >
-                {course.title}
+                <a href={`/courses/${course.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                  {course.title}
+                </a>
               </h3>
               {course.description && (
                 <p style={{ color: '#888888', fontSize: '0.9rem', lineHeight: 1.7, margin: 0 }}>
                   {course.description}
                 </p>
               )}
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: '#63E6A0', marginTop: 'auto' }}>
+              <a
+                href={`/courses/${course.slug}`}
+                style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: '#63E6A0', marginTop: 'auto', textDecoration: 'none' }}
+              >
                 View course →
-              </span>
-            </a>
+              </a>
+            </div>
           ))}
         </div>
       </div>

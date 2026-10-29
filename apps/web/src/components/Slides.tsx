@@ -48,9 +48,8 @@ export function Slides({ decks = DEFAULT_SLIDES }: Props) {
         }}
       >
         {decks.map((deck) => (
-          <a
+          <div
             key={deck.id}
-            href={`/slides/${deck.slug}`}
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -58,7 +57,6 @@ export function Slides({ decks = DEFAULT_SLIDES }: Props) {
               padding: '1.75rem',
               backgroundColor: '#141414',
               border: '1px solid #1F1F1F',
-              textDecoration: 'none',
             }}
           >
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: '#63E6A0' }}>
@@ -73,24 +71,28 @@ export function Slides({ decks = DEFAULT_SLIDES }: Props) {
                 margin: 0,
               }}
             >
-              {deck.title}
+              <a href={`/slides/${deck.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                {deck.title}
+              </a>
             </h3>
             {deck.description && (
               <p style={{ color: '#888888', fontSize: '0.9rem', lineHeight: 1.7, margin: 0 }}>
                 {deck.description}
               </p>
             )}
-            <span
+            <a
+              href={`/slides/${deck.slug}`}
               style={{
                 fontFamily: 'var(--font-mono)',
                 fontSize: '0.8rem',
                 color: '#63E6A0',
                 marginTop: 'auto',
+                textDecoration: 'none',
               }}
             >
               View deck →
-            </span>
-          </a>
+            </a>
+          </div>
         ))}
       </div>
 

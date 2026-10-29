@@ -170,14 +170,12 @@ export function BlogPostView({ post, related, siteUrl }: Props) {
               }}
             >
               {related.map((relatedPost) => (
-                <a
+                <div
                   key={relatedPost.id}
-                  href={`/blog/${relatedPost.slug}`}
                   style={{
                     display: 'block',
                     backgroundColor: '#141414',
                     border: '1px solid #1F1F1F',
-                    textDecoration: 'none',
                     overflow: 'hidden',
                   }}
                 >
@@ -218,7 +216,9 @@ export function BlogPostView({ post, related, siteUrl }: Props) {
                         letterSpacing: '-0.02em',
                       }}
                     >
-                      {relatedPost.title}
+                      <a href={`/blog/${relatedPost.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                        {relatedPost.title}
+                      </a>
                     </h3>
                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: '#888888' }}>
                       {formatDate(relatedPost.published_at)}
@@ -241,8 +241,11 @@ export function BlogPostView({ post, related, siteUrl }: Props) {
                         ))}
                       </div>
                     )}
+                    <a href={`/blog/${relatedPost.slug}`} style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: '#63E6A0', textDecoration: 'none', display: 'inline-block', marginTop: '0.75rem' }}>
+                      Read →
+                    </a>
                   </div>
-                </a>
+                </div>
               ))}
             </div>
           </div>

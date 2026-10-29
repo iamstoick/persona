@@ -160,14 +160,12 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
             }}
           >
             {grid.map((post) => (
-              <a
+              <div
                 key={post.id}
-                href={`/blog/${post.slug}`}
                 style={{
                   display: 'block',
                   backgroundColor: '#141414',
                   border: '1px solid #1F1F1F',
-                  textDecoration: 'none',
                   overflow: 'hidden',
                 }}
               >
@@ -208,7 +206,9 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
                       letterSpacing: '-0.02em',
                     }}
                   >
-                    {post.title}
+                    <a href={`/blog/${post.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                      {post.title}
+                    </a>
                   </h3>
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: '#888888' }}>
                     {formatDate(post.published_at)}
@@ -232,7 +232,7 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
                     </div>
                   )}
                 </div>
-              </a>
+              </div>
             ))}
           </div>
         )}
@@ -258,26 +258,24 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
                 {i > 0 && (
                   <hr style={{ border: 'none', borderTop: '1px solid #1F1F1F', margin: '1rem 0' }} />
                 )}
-                <a
-                  href={`/blog/${post.slug}`}
+                <div
                   className="blog-list-row"
                   style={{
                     display: 'grid',
                     gridTemplateColumns: '120px 1fr auto',
                     gap: '1.5rem',
                     alignItems: 'center',
-                    textDecoration: 'none',
                     padding: '0.5rem 0',
                   }}
                 >
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#888888' }}>
                     {formatDate(post.published_at)}
                   </span>
-                  <span style={{ color: '#E8E8E8', fontSize: '1rem' }}>{post.title}</span>
+                  <a href={`/blog/${post.slug}`} style={{ color: '#E8E8E8', fontSize: '1rem', textDecoration: 'none' }}>{post.title}</a>
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#888888' }}>
                     {post.read_time}m →
                   </span>
-                </a>
+                </div>
               </div>
             ))}
           </div>

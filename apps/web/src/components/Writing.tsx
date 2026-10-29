@@ -40,15 +40,13 @@ export function Writing({ featured, posts }: Props) {
       </h2>
 
       {featured && (
-        <a
-          href={`/blog/${featured.slug}`}
+        <div
           style={{
             display: 'block',
             padding: '2rem',
             marginBottom: '2.5rem',
             backgroundColor: '#141414',
             borderLeft: '3px solid #63E6A0',
-            textDecoration: 'none',
           }}
         >
           {featured.categories && featured.categories.length > 0 && (
@@ -76,13 +74,15 @@ export function Writing({ featured, posts }: Props) {
               letterSpacing: '-0.02em',
             }}
           >
-            {featured.title}
+            <a href={`/blog/${featured.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+              {featured.title}
+            </a>
           </h3>
           {featured.excerpt && (
             <p style={{ color: '#888888', lineHeight: 1.7, marginBottom: '1rem' }}>{featured.excerpt}</p>
           )}
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: '#63E6A0' }}>Read →</span>
-        </a>
+          <a href={`/blog/${featured.slug}`} style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: '#63E6A0', textDecoration: 'none' }}>Read →</a>
+        </div>
       )}
 
       {rest.length === 0 && !featured && (
