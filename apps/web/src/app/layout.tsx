@@ -21,7 +21,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://geraldvillorente.co
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'Gerald Villorente — Drupal Developer & DevOps Engineer in the Philippines',
+    default: 'Gerald Villorente | Drupal & DevOps Engineer Philippines',
     template: '%s | Gerald Villorente',
   },
   description:
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
   openGraph: {
     siteName: 'Gerald Villorente',
-    title: 'Gerald Villorente — Drupal Developer & DevOps Engineer in the Philippines',
+    title: 'Gerald Villorente | Drupal & DevOps Engineer Philippines',
     description:
       'Filipino software engineer for hire: Drupal development, DevOps and platform engineering, and AI engineering. Based in the Philippines, working worldwide.',
     url: siteUrl,
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Gerald Villorente — Drupal Developer & DevOps Engineer in the Philippines',
+    title: 'Gerald Villorente | Drupal & DevOps Engineer Philippines',
     description:
       'Filipino software engineer for hire: Drupal development, DevOps and platform engineering, and AI engineering.',
   },
