@@ -17,6 +17,7 @@ export default function AdminMediaPage() {
   const [items, setItems] = useState<Media[]>([]);
   const [uploading, setUploading] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   function load() {
@@ -27,16 +28,29 @@ export default function AdminMediaPage() {
 
   async function upload(files: FileList) {
     setUploading(true);
+    setUploadError(null);
+    const failed: string[] = [];
     for (const file of Array.from(files)) {
       const fd = new FormData();
       fd.append('file', file);
-      await authFetch('/api/admin/media', {
-        method: 'POST',
-        headers: {},
-        body: fd,
-      }).catch(() => {});
+      try {
+        const res = await authFetch('/api/admin/media', {
+          method: 'POST',
+          headers: {},
+          body: fd,
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => null);
+          failed.push(`${file.name}: ${data?.error || `Upload failed (${res.status})`}`);
+        }
+      } catch {
+        failed.push(`${file.name}: Upload failed — check your connection and try again.`);
+      }
     }
+    // Reset the input so picking the same file again still fires onChange.
+    if (inputRef.current) inputRef.current.value = '';
     setUploading(false);
+    if (failed.length > 0) setUploadError(failed.join(' '));
     load();
   }
 
@@ -73,6 +87,11 @@ export default function AdminMediaPage() {
         <p style={{ color: '#888888', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
           {uploading ? 'Uploading…' : 'Drop files here or click to upload'}
         </p>
+        {uploadError && (
+          <p style={{ color: '#FF4444', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', marginTop: '0.75rem' }}>
+            {uploadError}
+          </p>
+        )}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '1rem' }}>

@@ -21,6 +21,7 @@ const ALLOWED_TYPES = {
   'image/png': '.png',
   'image/gif': '.gif',
   'image/webp': '.webp',
+  'image/avif': '.avif',
   'video/mp4': '.mp4',
   'video/webm': '.webm',
   'application/pdf': '.pdf',
@@ -37,16 +38,35 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) => {
-    cb(null, Object.prototype.hasOwnProperty.call(ALLOWED_TYPES, file.mimetype));
+  fileFilter: (req, file, cb) => {
+    if (Object.prototype.hasOwnProperty.call(ALLOWED_TYPES, file.mimetype)) return cb(null, true);
+    req.rejectedMime = file.mimetype;
+    cb(null, false);
   },
 });
+
+// Multer failures (oversize, aborted multipart) otherwise fall through to the generic
+// error handler as a bare 500, which the uploader can't explain — translate them here.
+function uploadSingle(req, res, next) {
+  upload.single('file')(req, res, (err) => {
+    if (!err) return next();
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ error: 'File too large — 10 MB maximum' });
+    }
+    return res.status(400).json({ error: err.message || 'Upload rejected' });
+  });
+}
 
 const router = Router();
 const editorOrAdmin = requireRole('editor', 'admin');
 
-router.post('/', editorOrAdmin, upload.single('file'), async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+router.post('/', editorOrAdmin, uploadSingle, async (req, res) => {
+  if (!req.file) {
+    const detail = req.rejectedMime ? ` (received "${req.rejectedMime}")` : '';
+    return res.status(400).json({
+      error: `Unsupported file type${detail}. Allowed: JPEG, PNG, GIF, WebP, AVIF, MP4, WebM, PDF.`,
+    });
+  }
 
   const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/uploads/${req.file.filename}`;
   const { rows } = await pool.query(
