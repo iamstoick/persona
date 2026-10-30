@@ -40,8 +40,13 @@ export default function AdminMediaPage() {
           body: fd,
         });
         if (!res.ok) {
-          const data = await res.json().catch(() => null);
-          failed.push(`${file.name}: ${data?.error || `Upload failed (${res.status})`}`);
+          // Oversize bodies are rejected by nginx with an HTML page (no JSON
+          // body to parse), so map 413 to the same message the API would send.
+          const data = res.status === 413 ? null : await res.json().catch(() => null);
+          const reason = res.status === 413
+            ? 'File too large — 10 MB maximum'
+            : data?.error || `Upload failed (${res.status})`;
+          failed.push(`${file.name}: ${reason}`);
         }
       } catch {
         failed.push(`${file.name}: Upload failed — check your connection and try again.`);
