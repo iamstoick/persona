@@ -3,7 +3,6 @@
 import NextImage from 'next/image';
 import { Post } from '@/lib/api';
 import { CodeTabsEnhancer } from '@/components/CodeTabsEnhancer';
-import { GiscusEmbed } from '@/components/GiscusEmbed';
 import { ShareButtons } from '@/components/ShareButtons';
 import { renderTiptapContent } from '@/lib/renderTiptap';
 
@@ -251,26 +250,6 @@ export function BlogPostView({ post, related, siteUrl }: Props) {
           </div>
         )}
 
-        <div style={{ marginTop: '4rem', paddingTop: '3rem', borderTop: '1px solid #1F1F1F' }}>
-          <h2
-            style={{
-              fontFamily: 'var(--font-space-grotesk)',
-              fontSize: '1.2rem',
-              fontWeight: 700,
-              color: '#E8E8E8',
-              marginBottom: '1.5rem',
-            }}
-          >
-            Comments
-          </h2>
-          {post.slug ? (
-            <GiscusEmbed term={post.slug} />
-          ) : (
-            <p style={{ color: '#888888', fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>
-              Comments appear here once the post has a slug.
-            </p>
-          )}
-        </div>
       </article>
     </div>
   );

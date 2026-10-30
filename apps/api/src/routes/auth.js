@@ -14,7 +14,7 @@ const isProd = process.env.NODE_ENV === 'production';
 // Both are httpOnly (invisible to JS/XSS) and Secure in production (HTTPS only).
 const ACCESS_COOKIE = 'gv_access';
 const REFRESH_COOKIE = 'gv_refresh';
-const ACCESS_MAX_AGE_MS = 15 * 60 * 1000;
+const ACCESS_MAX_AGE_MS = 6 * 60 * 60 * 1000;
 const REFRESH_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 function setAuthCookies(res, accessToken, refreshToken) {
@@ -52,7 +52,7 @@ function clearAuthCookies(res) {
 function signTokens(user) {
   const payload = { id: user.id, email: user.email, role: user.role };
   const accessToken = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_ACCESS_EXPIRES || '15m',
+    expiresIn: process.env.JWT_ACCESS_EXPIRES || '6h',
   });
   const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
     expiresIn: process.env.JWT_REFRESH_EXPIRES || '7d',
