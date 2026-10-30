@@ -127,7 +127,7 @@ export function TiptapEditor({ content, onChange }: Props) {
           padding: '1rem',
           color: '#E8E8E8',
           fontFamily: 'var(--font-body)',
-          fontSize: '1rem',
+          fontSize: '1.05rem',
           lineHeight: 1.8,
           outline: 'none',
         }}
