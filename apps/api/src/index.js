@@ -54,7 +54,18 @@ app.use(cookieParser());
 configurePassport(passport);
 app.use(passport.initialize());
 
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use(
+  '/uploads',
+  express.static(path.join(__dirname, '../uploads'), {
+    setHeaders: (res, filePath) => {
+      // PDFs can embed JS and phishing forms — never render them in site-origin
+      // context; force a download instead.
+      if (filePath.toLowerCase().endsWith('.pdf')) {
+        res.setHeader('Content-Disposition', 'attachment');
+      }
+    },
+  })
+);
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }));
 
 app.use('/api/auth', authRoutes);

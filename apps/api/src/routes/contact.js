@@ -1,7 +1,12 @@
 import { Router } from 'express';
 import nodemailer from 'nodemailer';
+import { rateLimit } from '../middleware/rateLimit.js';
 
 const router = Router();
+
+// Redis-backed, so the limit survives restarts and applies across replicas —
+// the old in-process Map lost all state on every deploy.
+const contactThrottle = rateLimit({ prefix: 'contact', max: 5, windowMs: 15 * 60 * 1000 });
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -14,24 +19,10 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
-const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
-const RATE_LIMIT_MAX = 5;
-const hits = new Map();
-
-function rateLimit(req, res, next) {
-  const ip = req.ip;
-  const now = Date.now();
-  const entry = hits.get(ip);
-
-  if (!entry || now - entry.start > RATE_LIMIT_WINDOW_MS) {
-    hits.set(ip, { start: now, count: 1 });
-    return next();
-  }
-  if (entry.count >= RATE_LIMIT_MAX) {
-    return res.status(429).json({ error: 'too many requests — try again later' });
-  }
-  entry.count += 1;
-  next();
+// Newlines survive HTML-escaping, so strip them before interpolating into mail
+// headers — otherwise `name`/`subject` become email header injection vectors.
+function stripNewlines(str) {
+  return str.replace(/[\r\n]+/g, ' ');
 }
 
 function createTransport() {
@@ -46,7 +37,7 @@ function createTransport() {
   });
 }
 
-router.post('/', rateLimit, async (req, res) => {
+router.post('/', contactThrottle, async (req, res) => {
   const { name, email, subject, message } = req.body;
   if (!name || !email || !message) {
     return res.status(400).json({ error: 'name, email, and message are required' });
@@ -64,8 +55,8 @@ router.post('/', rateLimit, async (req, res) => {
     return res.status(400).json({ error: 'invalid field length' });
   }
 
-  const safeName = escapeHtml(name);
-  const safeSubject = subject ? escapeHtml(subject) : '';
+  const safeName = escapeHtml(stripNewlines(name));
+  const safeSubject = subject ? escapeHtml(stripNewlines(subject)) : '';
   const safeMessage = escapeHtml(message).replace(/\n/g, '<br>');
 
   const transport = createTransport();

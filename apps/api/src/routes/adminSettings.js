@@ -22,6 +22,21 @@ router.put('/:key', editorOrAdmin, async (req, res) => {
     return res.status(400).json({ error: 'Body must be a JSON object' });
   }
 
+  // Social hrefs render as raw <a href> in Contact.tsx — React does not sanitize
+  // javascript: URLs, so only http(s) and mailto links may be saved. The contact
+  // email feeds a mailto: link for the same reason.
+  if (key === 'contact' && req.body) {
+    const socials = Array.isArray(req.body.socials) ? req.body.socials : [];
+    for (const s of socials) {
+      if (typeof s?.href !== 'string' || !/^(https?:\/\/|mailto:)/i.test(s.href)) {
+        return res.status(400).json({ error: 'Social links must start with http(s):// or mailto:' });
+      }
+    }
+    if (req.body.email !== undefined && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(req.body.email))) {
+      return res.status(400).json({ error: 'Contact email is not a valid email address' });
+    }
+  }
+
   const { rows } = await pool.query(
     `INSERT INTO site_settings (key, value) VALUES ($1, $2)
      ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value

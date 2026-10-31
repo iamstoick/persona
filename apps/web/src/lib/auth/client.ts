@@ -42,7 +42,10 @@ export async function authFetch(path: string, options: RequestInit = {}) {
   }
 
   if (res.status === 401) {
-    window.location.href = '/admin/login';
+    // No /admin/login page exists — send expired sessions straight to Google
+    // OAuth, same entry the admin layout uses, preserving the current page.
+    const api = process.env.NEXT_PUBLIC_API_URL || '';
+    window.location.href = `${api}/api/auth/google?redirect=${encodeURIComponent(window.location.pathname)}`;
     throw new Error('Unauthenticated');
   }
 

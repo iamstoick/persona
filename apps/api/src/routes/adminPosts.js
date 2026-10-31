@@ -21,7 +21,15 @@ function slugify(name) {
 
 // Replaces a post's category/tag assignments: upserts the terms by slug, then
 // rewrites the join rows. Runs inside the caller's transaction (client).
+const SYNC_TABLES = new Set(['categories', 'tags', 'post_categories', 'post_tags']);
+const SYNC_REF_COLS = new Set(['category_id', 'tag_id']);
+
 async function syncTerms(client, postId, names, table, joinTable, refCol) {
+  // Identifiers can't be bound as $n params, so assert them against a fixed
+  // allowlist — a future caller passing user input here would otherwise be SQLi.
+  if (!SYNC_TABLES.has(table) || !SYNC_TABLES.has(joinTable) || !SYNC_REF_COLS.has(refCol)) {
+    throw new Error('Invalid syncTerms table');
+  }
   await client.query(`DELETE FROM ${joinTable} WHERE post_id = $1`, [postId]);
   for (const name of parseTerms(names)) {
     const slug = slugify(name);
@@ -64,7 +72,7 @@ router.get('/', editorOrAdmin, async (req, res) => {
 
   if (type) { params.push(type); conditions.push(`p.type = $${params.length}`); }
   if (status) { params.push(status); conditions.push(`p.status = $${params.length}`); }
-  if (q) { params.push(`%${q}%`); conditions.push(`p.title ILIKE $${params.length}`); }
+  if (q) { params.push(`%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`); conditions.push(`p.title ILIKE $${params.length}`); }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 

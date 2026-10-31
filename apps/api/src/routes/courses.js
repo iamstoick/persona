@@ -89,7 +89,23 @@ router.get('/:slug/lessons/:lessonId', requireAuth, async (req, res) => {
   res.json({ ...lesson, completed: completedRows.length > 0 });
 });
 
+async function lessonInCourse(lessonId, slug) {
+  const { rows } = await pool.query(
+    `SELECT l.id FROM course_lessons l
+     JOIN course_phases p ON p.id = l.phase_id
+     JOIN courses c ON c.id = p.course_id
+     WHERE l.id = $1 AND c.slug = $2`,
+    [lessonId, slug]
+  );
+  return Boolean(rows[0]);
+}
+
 router.post('/:slug/lessons/:lessonId/complete', requireAuth, async (req, res) => {
+  // The lesson must belong to the URL's course — otherwise anyone can pollute
+  // progress analytics by completing lessons across courses at will.
+  if (!(await lessonInCourse(req.params.lessonId, req.params.slug))) {
+    return res.status(404).json({ error: 'Not found' });
+  }
   await pool.query(
     `INSERT INTO course_progress (user_id, lesson_id) VALUES ($1, $2)
      ON CONFLICT (user_id, lesson_id) DO NOTHING`,
@@ -100,6 +116,9 @@ router.post('/:slug/lessons/:lessonId/complete', requireAuth, async (req, res) =
 });
 
 router.delete('/:slug/lessons/:lessonId/complete', requireAuth, async (req, res) => {
+  if (!(await lessonInCourse(req.params.lessonId, req.params.slug))) {
+    return res.status(404).json({ error: 'Not found' });
+  }
   await pool.query('DELETE FROM course_progress WHERE user_id = $1 AND lesson_id = $2', [
     req.user.id,
     req.params.lessonId,

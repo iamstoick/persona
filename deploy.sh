@@ -40,10 +40,15 @@ if [[ -n "${CLOUDFLARE_ZONE_ID:-}" && -n "${CLOUDFLARE_API_TOKEN:-}" ]]; then
   echo "Purging Cloudflare cache..."
   # -4: the API token is restricted to the server's IPv4 egress; over IPv6 the API
   # rejects it ("Cannot use the access token from location").
+  # The token travels via a curl config file, never on the command line, so it
+  # doesn't show up in the process list to other users on this shared host.
+  purge_cfg=$(mktemp)
+  chmod 600 "$purge_cfg"
+  printf 'header = "Authorization: Bearer %s"\nheader = "Content-Type: application/json"\n' "$CLOUDFLARE_API_TOKEN" > "$purge_cfg"
   curl -4 -s -X POST "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/purge_cache" \
-    -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
-    -H "Content-Type: application/json" \
+    -K "$purge_cfg" \
     --data '{"purge_everything":true}'
+  rm -f "$purge_cfg"
   echo
 else
   echo "Skipping Cloudflare cache purge (CLOUDFLARE_ZONE_ID / CLOUDFLARE_API_TOKEN not set)."

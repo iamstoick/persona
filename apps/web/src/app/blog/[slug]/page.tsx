@@ -77,7 +77,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        // Escape `<` so a `</script>` inside any DB-sourced field (title, excerpt,
+        // author, slug…) can't break out of this block into stored XSS.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
       />
       <ReadingProgress />
       <BlogPostView post={post} related={related} siteUrl={siteUrl} />

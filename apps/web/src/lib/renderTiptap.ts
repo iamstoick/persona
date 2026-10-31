@@ -22,7 +22,22 @@ export function renderTiptapContent(content: Record<string, unknown> | null): st
       CodeTabs,
       CodeTab,
     ]);
-    return DOMPurify.sanitize(html);
+    // Explicit policy instead of bare defaults: dangerous tags are dropped even if
+    // a DOMPurify upgrade changes what the defaults allow, and only http(s),
+    // mailto, tel, and relative URLs survive in href/src (no javascript:/data:).
+    // Editor-created links are further constrained by Tiptap's own protocol
+    // allowlist; this is the render-layer guarantee.
+    return DOMPurify.sanitize(html, {
+      FORBID_TAGS: [
+        'script', 'style', 'iframe', 'object', 'embed', 'form', 'input', 'button',
+        'select', 'textarea', 'option', 'link', 'meta', 'base', 'title',
+        'frame', 'frameset', 'noscript', 'template', 'slot', 'math', 'svg',
+      ],
+      FORBID_ATTR: ['style'],
+      ALLOW_UNKNOWN_PROTOCOLS: false,
+      ALLOWED_URI_REGEXP:
+        /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp):|[^a-zA-Z0-9+.\-]|#)/i,
+    });
   } catch {
     return '';
   }
