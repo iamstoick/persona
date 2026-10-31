@@ -158,7 +158,7 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
           action="/blog"
           method="get"
           role="search"
-          style={{ display: 'flex', gap: '0.5rem', maxWidth: '560px' }}
+          style={{ display: 'flex', gap: '0.5rem', width: '100%' }}
         >
           <input
             type="search"
@@ -167,7 +167,8 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
             placeholder="Search articles…"
             aria-label="Search articles"
             style={{
-              flex: 1,
+              flex: '1 1 auto',
+              minWidth: 0,
               padding: '0.6rem 0.9rem',
               backgroundColor: '#141414',
               border: '1px solid #1F1F1F',
