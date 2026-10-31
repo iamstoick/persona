@@ -12,29 +12,51 @@ interface Post {
   updated_at: string;
 }
 
+const PAGE_SIZE = 20;
+
 export default function AdminPostsPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [filter, setFilter] = useState({ type: '', status: '', q: '' });
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
-  function load() {
+  function load(activePage: number) {
     const params = new URLSearchParams();
     if (filter.type) params.set('type', filter.type);
     if (filter.status) params.set('status', filter.status);
     if (filter.q) params.set('q', filter.q);
+    params.set('page', String(activePage));
+    params.set('limit', String(PAGE_SIZE));
 
     authFetch(`/api/admin/posts?${params}`)
-      .then((r) => r.json())
+      .then((r) => {
+        const count = parseInt(r.headers.get('X-Total-Count') || '0', 10) || 0;
+        setTotal(count);
+        const lastPage = Math.max(1, Math.ceil(count / PAGE_SIZE));
+        if (activePage > lastPage) setPage(lastPage);
+        return r.json();
+      })
       .then((data) => setPosts(Array.isArray(data) ? data : []))
       .catch(() => setPosts([]));
   }
 
-  useEffect(() => { load(); }, [filter]);
+  useEffect(() => { load(page); }, [filter, page]);
+
+  function updateFilter(next: Partial<typeof filter>) {
+    setFilter({ ...filter, ...next });
+    setPage(1);
+  }
 
   async function deletePost(id: string) {
     if (!confirm('Archive this post?')) return;
     await authFetch(`/api/admin/posts/${id}`, { method: 'DELETE' });
-    load();
+    load(page);
   }
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const rangeStart = total === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(safePage * PAGE_SIZE, total);
 
   const selectStyle: React.CSSProperties = {
     padding: '0.4rem 0.75rem',
@@ -58,12 +80,12 @@ export default function AdminPostsPage() {
       </div>
 
       <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>
-        <select style={selectStyle} value={filter.type} onChange={(e) => setFilter({ ...filter, type: e.target.value })}>
+        <select style={selectStyle} value={filter.type} onChange={(e) => updateFilter({ type: e.target.value })}>
           <option value="">All types</option>
           <option value="post">Post</option>
           <option value="page">Page</option>
         </select>
-        <select style={selectStyle} value={filter.status} onChange={(e) => setFilter({ ...filter, status: e.target.value })}>
+        <select style={selectStyle} value={filter.status} onChange={(e) => updateFilter({ status: e.target.value })}>
           <option value="">All statuses</option>
           <option value="draft">Draft</option>
           <option value="published">Published</option>
@@ -73,7 +95,7 @@ export default function AdminPostsPage() {
           placeholder="Search title…"
           style={{ ...selectStyle, flex: 1 }}
           value={filter.q}
-          onChange={(e) => setFilter({ ...filter, q: e.target.value })}
+          onChange={(e) => updateFilter({ q: e.target.value })}
         />
       </div>
 
@@ -125,6 +147,31 @@ export default function AdminPostsPage() {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
+        <span style={{ color: '#888888', fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
+          Showing {rangeStart}–{rangeEnd} of {total}
+        </span>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={safePage <= 1}
+            style={{ ...selectStyle, cursor: safePage <= 1 ? 'default' : 'pointer', opacity: safePage <= 1 ? 0.4 : 1 }}
+          >
+            ← Prev
+          </button>
+          <span style={{ color: '#E8E8E8', fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
+            Page {safePage} of {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={safePage >= totalPages}
+            style={{ ...selectStyle, cursor: safePage >= totalPages ? 'default' : 'pointer', opacity: safePage >= totalPages ? 0.4 : 1 }}
+          >
+            Next →
+          </button>
+        </div>
       </div>
     </div>
   );

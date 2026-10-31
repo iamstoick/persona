@@ -68,6 +68,13 @@ router.get('/', editorOrAdmin, async (req, res) => {
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
+  // Total matching rows for the same filter, so the admin list can paginate.
+  // Count params are only the filter values: limit/offset join params below.
+  const { rows: countRows } = await pool.query(
+    `SELECT COUNT(*) FROM posts p ${where}`,
+    params
+  );
+
   params.push(limit, offset);
   const { rows } = await pool.query(
     `SELECT p.*, u.name AS author_name
@@ -79,6 +86,7 @@ router.get('/', editorOrAdmin, async (req, res) => {
     params
   );
 
+  res.set('X-Total-Count', String(parseInt(countRows[0].count, 10)));
   res.json(rows);
 });
 
