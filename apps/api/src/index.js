@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 import { configurePassport } from './middleware/passport.js';
+import { rateLimit } from './middleware/rateLimit.js';
 import authRoutes from './routes/auth.js';
 import postsRoutes from './routes/posts.js';
 import adminPostsRoutes from './routes/adminPosts.js';
@@ -50,6 +51,22 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// CSP violation reports (Report-Only mode): unauthenticated by design — browsers
+// POST here on their own. Throttled, size-capped, logged only; never stored.
+app.post(
+  '/api/csp-report',
+  rateLimit({ prefix: 'csp', max: 60, windowMs: 60 * 1000 }),
+  express.json({ type: ['application/json', 'application/csp-report'], limit: '10kb' }),
+  (req, res) => {
+    const r = req.body?.['csp-report'];
+    if (r) {
+      const sample = String(r['script-sample'] || r['source-file'] || '').slice(0, 120);
+      console.warn(`[csp] blocked-uri=${r['blocked-uri'] || '?'} directive=${r['violated-directive'] || '?'} sample=${sample}`);
+    }
+    res.status(204).end();
+  }
+);
 
 configurePassport(passport);
 app.use(passport.initialize());

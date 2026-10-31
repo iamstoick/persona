@@ -19,6 +19,28 @@ const csp = [
   .filter(Boolean)
   .join('; ');
 
+// Report-only preview of the hardened policy: identical to `csp` but WITHOUT
+// script/style 'unsafe-inline'. It changes nothing — browsers only REPORT what
+// would break (Next.js bootstrap scripts, font <style> blocks, …) to
+// /api/csp-report so the strict policy can be proven safe before enforcing it.
+const cspReportOnly = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com",
+  `img-src 'self' data: https:${isProd ? '' : ' http://localhost:4000'}`,
+  `connect-src 'self'${isProd ? '' : ' http://localhost:4000'}`,
+  "frame-src https://giscus.app",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  isProd ? 'upgrade-insecure-requests' : '',
+  'report-uri /api/csp-report',
+]
+  .filter(Boolean)
+  .join('; ');
+
 // X-Frame-Options, X-Content-Type-Options, Referrer-Policy, and Permissions-Policy are
 // already set by the production nginx vhost (/etc/nginx/sites-available/geraldvillorente.com)
 // in front of this app — kept only here for local dev (no nginx in front) plus CSP/HSTS,
@@ -51,7 +73,10 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/:path*',
-        headers: securityHeaders,
+        headers: [
+          ...securityHeaders,
+          { key: 'Content-Security-Policy-Report-Only', value: cspReportOnly },
+        ],
       },
     ];
   },
