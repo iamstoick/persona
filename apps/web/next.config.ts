@@ -68,6 +68,10 @@ const nextConfig: NextConfig = {
       { protocol: 'http', hostname: 'localhost' },
     ],
     formats: ['image/avif', 'image/webp'],
+    // Uploaded files get unique server-generated names and are never modified
+    // in place, so an optimized variant stays valid indefinitely — optimize
+    // once, then serve from cache instead of re-optimizing on every deploy.
+    minimumCacheTTL: 31536000,
   },
   async headers() {
     return [

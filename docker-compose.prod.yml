@@ -69,6 +69,11 @@ services:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
         API_INTERNAL_URL: http://api:4000
+    volumes:
+      # Persist Next.js optimized-image cache across deploys. Without this every
+      # deploy wipes .next/cache, so the first visits re-optimize all thumbnails
+      # on demand (slow/timeout-prone) until refreshes warm the cache again.
+      - images_cache_prod:/app/.next/cache/images
     env_file: .env
     environment:
       NODE_ENV: production
@@ -118,6 +123,7 @@ volumes:
   pgdata_prod:
   redisdata_prod:
   uploads_prod:
+  images_cache_prod:
   certbot_www:
   certbot_conf:
 
