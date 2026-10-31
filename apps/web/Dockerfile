@@ -38,6 +38,12 @@ COPY --from=builder --chown=nodejs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nodejs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nodejs:nodejs /app/public ./public
 
+# Seed the image-cache dir with app ownership: a fresh named volume mounted
+# here inherits the image's ownership, so the nodejs runtime can actually write
+# optimized images (a root-owned volume fails every cache write with EACCES
+# and forces slow on-demand re-optimization on every cold hit).
+RUN mkdir -p /app/.next/cache/images && chown -R nodejs:nodejs /app/.next/cache
+
 USER nodejs
 
 EXPOSE 8899
