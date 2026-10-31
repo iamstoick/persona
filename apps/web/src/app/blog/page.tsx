@@ -14,11 +14,13 @@ function formatDate(iso: string | null) {
   return new Date(iso).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-async function getBlogData(page = 1) {
+async function getBlogData(page = 1, q = '') {
   try {
     const [featured, all] = await Promise.all([
       apiFetch<Post>('/api/posts/featured'),
-      apiFetch<PostsResponse>(`/api/posts?type=post&status=published&page=${page}&limit=12`),
+      apiFetch<PostsResponse>(
+        `/api/posts?type=post&status=published&page=${page}&limit=12${q ? `&q=${encodeURIComponent(q)}` : ''}`
+      ),
     ]);
     return { featured, all };
   } catch {
@@ -26,10 +28,12 @@ async function getBlogData(page = 1) {
   }
 }
 
-export default async function BlogPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
-  const { page: pageParam } = await searchParams;
+export default async function BlogPage({ searchParams }: { searchParams: Promise<{ page?: string; q?: string }> }) {
+  const { page: pageParam, q: qParam } = await searchParams;
   const page = Math.max(1, parseInt(pageParam || '1') || 1);
-  const { featured, all } = await getBlogData(page);
+  const q = (qParam || '').trim();
+  const { featured, all } = await getBlogData(page, q);
+  const searching = q.length > 0;
 
   const rest = all.data.filter((p) => p.id !== featured?.id);
   const grid = rest.slice(0, 3);
@@ -148,9 +152,106 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
         </section>
       )}
 
+      {/* Search — plain GET form, no JavaScript needed */}
+      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '2.5rem 2rem 0' }}>
+        <form
+          action="/blog"
+          method="get"
+          role="search"
+          style={{ display: 'flex', gap: '0.5rem', maxWidth: '560px' }}
+        >
+          <input
+            type="search"
+            name="q"
+            defaultValue={q}
+            placeholder="Search articles…"
+            aria-label="Search articles"
+            style={{
+              flex: 1,
+              padding: '0.6rem 0.9rem',
+              backgroundColor: '#141414',
+              border: '1px solid #1F1F1F',
+              color: '#E8E8E8',
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.9rem',
+            }}
+          />
+          <button
+            type="submit"
+            style={{
+              padding: '0.6rem 1.25rem',
+              backgroundColor: '#63E6A0',
+              color: '#0D0D0D',
+              fontFamily: 'var(--font-space-grotesk)',
+              fontWeight: 700,
+              fontSize: '0.875rem',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            Search
+          </button>
+        </form>
+      </div>
+
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '4rem 2rem' }}>
+        {/* Search results */}
+        {searching && (
+          <div>
+            <h2
+              style={{
+                fontFamily: 'var(--font-space-grotesk)',
+                fontWeight: 700,
+                color: '#888888',
+                marginBottom: '1.5rem',
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                fontSize: '0.8rem',
+              }}
+            >
+              {all.total} {all.total === 1 ? 'result' : 'results'} for “{q}”
+            </h2>
+            {all.data.length === 0 ? (
+              <div>
+                <p style={{ color: '#E8E8E8', lineHeight: 1.7, marginBottom: '1rem' }}>
+                  No articles matched your search.
+                </p>
+                <a href="/blog" style={{ color: '#63E6A0', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
+                  ← Browse all articles
+                </a>
+              </div>
+            ) : (
+              all.data.map((post, i) => (
+                <div key={post.id}>
+                  {i > 0 && (
+                    <hr style={{ border: 'none', borderTop: '1px solid #1F1F1F', margin: '1rem 0' }} />
+                  )}
+                  <div
+                    className="blog-list-row"
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '120px 1fr auto',
+                      gap: '1.5rem',
+                      alignItems: 'center',
+                      padding: '0.5rem 0',
+                    }}
+                  >
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#888888' }}>
+                      {formatDate(post.published_at)}
+                    </span>
+                    <a href={`/blog/${post.slug}`} style={{ color: '#E8E8E8', fontSize: '1rem', textDecoration: 'none' }}>{post.title}</a>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: '#888888' }}>
+                      {post.read_time}m →
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
         {/* Grid — latest 3 (excluding featured) */}
-        {grid.length > 0 && (
+        {!searching && grid.length > 0 && (
           <div
             style={{
               display: 'grid',
@@ -238,7 +339,7 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
         )}
 
         {/* Paginated list */}
-        {list.length > 0 && (
+        {!searching && list.length > 0 && (
           <div>
             <h2
               style={{
@@ -286,7 +387,7 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '3rem' }}>
             {page > 1 && (
               <a
-                href={`/blog?page=${page - 1}`}
+                href={searching ? `/blog?q=${encodeURIComponent(q)}&page=${page - 1}` : `/blog?page=${page - 1}`}
                 style={{ color: '#888888', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}
               >
                 ← Newer
@@ -294,7 +395,7 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
             )}
             {page * all.limit < all.total && (
               <a
-                href={`/blog?page=${page + 1}`}
+                href={searching ? `/blog?q=${encodeURIComponent(q)}&page=${page + 1}` : `/blog?page=${page + 1}`}
                 style={{ color: '#888888', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}
               >
                 Older →

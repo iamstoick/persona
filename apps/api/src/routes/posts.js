@@ -12,12 +12,20 @@ function readTime(content) {
 }
 
 router.get('/', async (req, res) => {
-  const { type = 'post', status = 'published', page: pageParam = '1', limit: limitParam = '10' } = req.query;
+  const { type = 'post', status = 'published', page: pageParam = '1', limit: limitParam = '10', q: qParam = '' } = req.query;
   const { page, limit, offset } = parsePagination({ page: pageParam, limit: limitParam });
-  const cacheKey = `cache:posts:list:${type}:${status}:${page}:${limit}`;
+  const q = typeof qParam === 'string' ? qParam.trim().slice(0, 100) : '';
+  const cacheKey = `cache:posts:list:${type}:${status}:${page}:${limit}:${q}`;
 
   const cached = await cacheGet(cacheKey);
   if (cached) return res.json(cached);
+
+  const params = [type, status];
+  let searchClause = '';
+  if (q) {
+    params.push(`%${q}%`);
+    searchClause = ` AND (p.title ILIKE $${params.length} OR p.excerpt ILIKE $${params.length})`;
+  }
 
   const { rows } = await pool.query(
     `SELECT p.*, u.name AS author_name, u.avatar_url AS author_avatar,
@@ -26,16 +34,16 @@ router.get('/', async (req, res) => {
      LEFT JOIN users u ON u.id = p.author_id
      LEFT JOIN post_tags pt ON pt.post_id = p.id
      LEFT JOIN tags t ON t.id = pt.tag_id
-     WHERE p.type = $1 AND p.status = $2
+     WHERE p.type = $1 AND p.status = $2${searchClause}
      GROUP BY p.id, u.name, u.avatar_url
      ORDER BY p.published_at DESC
-     LIMIT $3 OFFSET $4`,
-    [type, status, limit, offset]
+     LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+    [...params, limit, offset]
   );
 
   const { rows: countRows } = await pool.query(
-    'SELECT COUNT(*) FROM posts WHERE type = $1 AND status = $2',
-    [type, status]
+    `SELECT COUNT(*) FROM posts p WHERE p.type = $1 AND p.status = $2${searchClause}`,
+    params
   );
 
   const result = {
