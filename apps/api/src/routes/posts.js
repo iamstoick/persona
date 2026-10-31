@@ -23,7 +23,9 @@ router.get('/', async (req, res) => {
   const params = [type, status];
   let searchClause = '';
   if (q) {
-    params.push(`%${q}%`);
+    // Escape LIKE wildcards so the keyword matches literally — a raw `%`
+    // would otherwise turn any query into a match-everything scan.
+    params.push(`%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`);
     searchClause = ` AND (p.title ILIKE $${params.length} OR p.excerpt ILIKE $${params.length})`;
   }
 
